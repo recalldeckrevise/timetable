@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 10C Timetable — Full Grid</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Plus Jakarta Sans & Inter Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: #ffffff !important; padding: 0 !important; }
+            .timetable-shell { box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+    </style>
+</head>
+<body class="bg-[#F8FAFC] text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
+
+    <!-- Minimal Sleek Top Control Bar -->
+    <header class="bg-white/85 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 no-print">
+        <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                
+                <!-- Left: Clean Title & Subtle Subtitle -->
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#0284C7] to-[#0EA5E9] flex items-center justify-center text-white shadow-sm shadow-sky-500/20">
+                        <i data-lucide="calendar-range" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 leading-none">Class 10C Timetable</h1>
+                        <p id="active-subtitle" class="text-xs font-medium text-slate-500 mt-1">Week A • Monday 9th Nov – Friday 13th Nov</p>
+                    </div>
+                </div>
+
+                <!-- Center: Segmented Pill Toggle (Week A | Week B | Both Weeks) + Quick Search -->
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <div class="bg-slate-100/90 p-1 rounded-full border border-slate-200/80 flex items-center shadow-inner" role="group" aria-label="View Mode">
+                        <button id="btn-view-A" onclick="setViewMode('A')" class="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer">
+                            Week A
+                        </button>
+                        <button id="btn-view-B" onclick="setViewMode('B')" class="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer">
+                            Week B
+                        </button>
+                        <button id="btn-view-BOTH" onclick="setViewMode('BOTH')" class="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer">
+                            Both Weeks
+                        </button>
+                    </div>
+
+                    <!-- Compact Filter Input -->
+                    <div class="relative hidden md:block w-48 lg:w-56">
+                        <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                        <input id="search-input" type="text" oninput="handleSearch(this.value)" placeholder="Highlight subject, room..." 
+                            class="w-full pl-8 pr-7 py-1.5 rounded-full bg-slate-100/80 hover:bg-slate-100 focus:bg-white text-slate-800 placeholder-slate-400 text-xs font-medium border border-slate-200/80 focus:border-sky-400 focus:ring-2 focus:ring-sky-500/15 outline-none transition-all">
+                        <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer" title="Clear filter">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: Copy HTML Code & Print Buttons -->
+                <div class="flex items-center gap-2">
+                    <button onclick="openSourceModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition-all cursor-pointer">
+                        <i data-lucide="code-2" class="w-3.5 h-3.5 text-sky-600"></i>
+                        <span>Copy HTML Code</span>
+                    </button>
+                    <button onclick="window.print()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 shadow-2xs transition-all cursor-pointer">
+                        <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                        <span>Print</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- Full-Grid Timetable Canvas -->
+    <main class="flex-1 max-w-[1440px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-6 flex flex-col justify-center">
+        
+        <!-- Dynamic Timetable Grids Container -->
+        <div id="grids-container" class="space-y-6">
+            <!-- Populated via JS -->
+        </div>
+
+        <!-- Minimal Subtle Footer Legend -->
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-3 px-1 text-[11px] font-medium text-slate-500 no-print">
+            <div class="flex flex-wrap items-center gap-3.5">
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#16A34A]"></span> Science</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#7C3AED]"></span> RE</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#1E1B4B]"></span> Computer Science</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#0F172A]"></span> PE</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-white border border-slate-300"></span> Core &amp; Humanities</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-slate-400">
+                <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+                <span>Click any cell to add homework or equipment notes</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Minimal Lesson Quick-Notes Popover / Modal -->
+    <div id="note-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/45 backdrop-blur-xs p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200/90 w-full max-w-sm overflow-hidden transform transition-all">
+            <div id="modal-banner" class="px-5 py-4 bg-gradient-to-r from-[#0284C7] to-[#0EA5E9] text-white flex items-start justify-between">
+                <div>
+                    <div id="modal-subtitle" class="text-[11px] font-bold uppercase tracking-wider opacity-85">Week A • Monday • Period 1</div>
+                    <h2 id="modal-title" class="text-lg font-extrabold mt-0.5 leading-snug">English</h2>
+                    <p id="modal-details" class="text-xs opacity-90 mt-0.5">10C/En4 • Room 38 • Miss S Ahmed</p>
+                </div>
+                <button onclick="closeNoteModal()" class="p-1 rounded-lg bg-white/15 hover:bg-white/25 transition-colors cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-3">
+                <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold text-slate-700">Homework &amp; Reminders</label>
+                    <span id="note-count" class="text-[11px] font-medium text-slate-400">0 notes</span>
+                </div>
+
+                <form onsubmit="addNote(event)" class="flex gap-2">
+                    <input id="note-input" type="text" placeholder="e.g. Bring PE kit, Calculator..." 
+                        class="flex-1 px-3 py-2 rounded-xl border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 outline-none text-xs font-medium">
+                    <button type="submit" class="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition-colors cursor-pointer">
+                        Add
+                    </button>
+                </form>
+
+                <ul id="note-list" class="space-y-1.5 max-h-40 overflow-y-auto">
+                    <!-- Populated via JS -->
+                </ul>
+            </div>
+
+            <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 flex justify-end">
+                <button onclick="closeNoteModal()" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition-colors cursor-pointer">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Standalone HTML Code Modal -->
+    <div id="source-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden flex flex-col max-h-[82vh]">
+            <div class="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="file-code-2" class="w-4 h-4 text-sky-400"></i>
+                    <span class="text-sm font-bold">Standalone HTML Source Code</span>
+                </div>
+                <button onclick="closeSourceModal()" class="p-1 rounded-lg hover:bg-white/15 transition-colors cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="p-4 bg-slate-950 flex-1 overflow-y-auto">
+                <textarea id="source-textarea" readonly class="w-full h-72 bg-slate-950 text-sky-300 font-mono text-[11px] leading-relaxed focus:outline-none resize-none"></textarea>
+            </div>
+            <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+                <span class="text-xs text-slate-500">Save as <code class="bg-slate-200/80 px-1.5 py-0.5 rounded font-mono text-slate-800">timetable.html</code></span>
+                <div class="flex items-center gap-3">
+                    <span id="copy-feedback" class="text-xs font-bold text-emerald-600 hidden">Copied!</span>
+                    <button onclick="copyHtmlCode()" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white shadow-xs transition-colors cursor-pointer">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        <span>Copy Code</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ============================================================================
+         * EXACT CLASS 10C TIMETABLE DATA — WEEK A & WEEK B
+         * ============================================================================
+         */
+        const TIMETABLE_DATA = {
+            periods: ["Registration", "Period 1", "Period 2", "Period 3"],
+            weeks: {
+                A: {
+                    label: "Week A",
+                    dateRange: "Monday 9th Nov – Friday 13th Nov",
+                    days: [
+                        { name: "Monday", date: "9th Nov" },
+                        { name: "Tuesday", date: "10th Nov" },
+                        { name: "Wednesday", date: "11th Nov" },
+                        { name: "Thursday", date: "12th Nov" },
+                        { name: "Friday", date: "13th Nov" }
+                    ],
+                    rows: [
+                        // Row 1: Registration
+                        [
+                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
+                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
+                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
+                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
+                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" }
+                        ],
+                        // Row 2: Period 1
+                        [
+                            { code: "10C/En4", room: "38", subject: "English", teacher: "Miss S Ahmed", color: "white" },
+                            { code: "10C/Ma3", room: "T4", subject: "Maths", teacher: "Mrs H Begum", color: "white" },
+                            { code: "10N/Gg2", room: "14", subject: "Geography", teacher: "Mr B Cannon", color: "white" },
+                            { code: "10C/Ct2", room: "24", subject: "Citizenship", teacher: "Miss S Knowles", color: "white" },
+                            { code: "10N/Gg2", room: "14", subject: "Geography", teacher: "Mr B Cannon", color: "white" }
+                        ],
+                        // Row 3: Period 2
+                        [
+                            { code: "10C/Ma3", room: "T4", subject: "Maths", teacher: "Mrs H Begum", color: "white" },
+                            { code: "10K/Ts1", room: "Science SC3", subject: "Triple Science", teacher: "Mr D Way", color: "white" },
+                            { code: "10K/Ts1", room: "10", subject: "Triple Science", teacher: "Mr D Way", color: "white" },
+                            { code: "10C/Sc3", room: "Science SC1", subject: "Science", teacher: "Mr L Bennett", color: "green" },
+                            { code: "Y10C Boys Set 1-4", room: "Gos PE 3", subject: "PE", teacher: "Mrs J Barker", color: "black" }
+                        ],
+                        // Row 4: Period 3
+                        [
+                            { code: "Y10C Boys Set 1-4", room: "Gos PE 3", subject: "PE", teacher: "Mrs J Barker", color: "black" },
+                            { code: "10C/En4", room: "38", subject: "English", teacher: "Miss S Ahmed", color: "white" },
+                            { code: "10C/En4", room: "38", subject: "English", teacher: "Miss S Ahmed", color: "white" },
+                            { code: "10J/Cs1", room: "45", subject: "Computer Science", teacher: "Mr R Hylton", color: "indigo" },
+                            { code: "10C/Re2", room: "32", subject: "RE", teacher: "Miss A Shahab", color: "purple" }
+                        ]
+                    ]
+                },
+                B: {
+                    label: "Week B",
+                    dateRange: "Monday 16th Nov – Friday 20th Nov",
+                    days: [
+                        { name: "Monday", date: "16th Nov" },
+                        { name: "Tuesday", date: "17th Nov" },
+                        { name: "Wednesday", date: "18th Nov" },
+                        { name: "Thursday", date: "19th Nov" },
+                        { name: "Friday", date: "20th Nov" }
+                    ],
+                    rows: [
+                        // Row 1: Registration
+                        [
+                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
+                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
+                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss T Sultana", color: "white" },
+                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss T Sultana", color: "white" },
+                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss T Sultana", color: "white" }
+                        ],
+                        // Row 2: Period 1
+                        [
+                            { code: "10C/Re2", room: "32", subject: "RE", teacher: "Miss A Shahab", color: "purple" },
+                            { code: "10N/Gg2", room: "14", subject: "Geography", teacher: "Mr B Cannon", color: "white" },
+                            { code: "10C/Sc3", room: "Science SC6", subject: "Science", teacher: "Mrs A Whyte", color: "green" },
+                            { code: "10C/Sc3", room: "Science SC1", subject: "Science", teacher: "Mr L Bennett", color: "green" },
+                            { code: "10C/Ma3", room: "T9", subject: "Maths", teacher: "Ms A Begum", color: "white" }
+                        ],
+                        // Row 3: Period 2
+                        [
+                            { code: "10C/Sc3", room: "Science SC6", subject: "Science", teacher: "Mrs A Whyte", color: "green" },
+                            { code: "10C/En4", room: "38", subject: "English", teacher: "Miss S Ahmed", color: "white" },
+                            { code: "10C/En4", room: "38", subject: "English", teacher: "Miss S Ahmed", color: "white" },
+                            { code: "10K/Ts1", room: "Science SC3", subject: "Triple Science", teacher: "Mr D Way", color: "white" },
+                            { code: "10J/Cs1", room: "45", subject: "Computer Science", teacher: "Mr R Hylton", color: "indigo" }
+                        ],
+                        // Row 4: Period 3
+                        [
+                            { code: "10C/Ma3", room: "T9", subject: "Maths", teacher: "Ms A Begum", color: "white" },
+                            { code: "10C/Sc3", room: "Science SC1", subject: "Science", teacher: "Mr L Bennett", color: "green" },
+                            { code: "10C/Ma3", room: "T9", subject: "Maths", teacher: "Ms A Begum", color: "white" },
+                            { code: "10J/Cs1", room: "45", subject: "Computer Science", teacher: "Mr R Hylton", color: "indigo" },
+                            { code: "10C/Re2", room: "32", subject: "RE", teacher: "Miss A Shahab", color: "purple" }
+                        ]
+                    ]
+                }
+            }
+        };
+
+        // Application State
+        let viewMode = 'A'; // 'A' | 'B' | 'BOTH'
+        let searchQuery = '';
+        let activeNoteSlot = null;
+        let notesStore = loadNotes();
+
+        function loadNotes() {
+            try {
+                const raw = localStorage.getItem('class_10c_aesthetic_notes_v1');
+                return raw ? JSON.parse(raw) : {};
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function saveNotes() {
+            try {
+                localStorage.setItem('class_10c_aesthetic_notes_v1', JSON.stringify(notesStore));
+            } catch (e) {
+                console.warn('Unable to save notes:', e);
+            }
+        }
+
+        // Switch between Week A, Week B, and Both Weeks
+        function setViewMode(mode) {
+            viewMode = mode;
+            const subtitleEl = document.getElementById('active-subtitle');
+
+            if (mode === 'A') {
+                subtitleEl.textContent = "Week A • Monday 9th Nov – Friday 13th Nov";
+            } else if (mode === 'B') {
+                subtitleEl.textContent = "Week B • Monday 16th Nov – Friday 20th Nov";
+            } else {
+                subtitleEl.textContent = "Full 2-Week Overview • Week A & Week B";
+            }
+
+            ['A', 'B', 'BOTH'].forEach(key => {
+                const btn = document.getElementById(`btn-view-${key}`);
+                if (key === mode) {
+                    btn.className = "px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold bg-white text-slate-900 shadow-xs transition-all duration-200 cursor-pointer";
+                } else {
+                    btn.className = "px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-900 transition-all duration-200 cursor-pointer";
+                }
+            });
+
+            renderGrids();
+        }
+
+        // Search Filter
+        function handleSearch(val) {
+            searchQuery = val.trim().toLowerCase();
+            const clearBtn = document.getElementById('clear-search-btn');
+            if (searchQuery.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+            renderGrids();
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('search-input');
+            input.value = '';
+            handleSearch('');
+            input.focus();
+        }
+
+        // Aesthetic Color Tokens per Subject Color
+        function getCellStyles(color) {
+            switch (color) {
+                case 'green':
+                    return {
+                        card: 'bg-gradient-to-br from-[#16A34A] to-[#15803D] text-white border-emerald-600/40 shadow-xs shadow-emerald-950/5 inset-ring inset-ring-white/15',
+                        pill: 'bg-black/20 text-emerald-50 border-white/10',
+                        room: 'text-emerald-100',
+                        subject: 'text-white',
+                        teacher: 'text-emerald-100/95',
+                        banner: 'bg-gradient-to-r from-[#16A34A] to-[#15803D] text-white'
+                    };
+                case 'purple':
+                    return {
+                        card: 'bg-gradient-to-br from-[#7C3AED] to-[#6D28D9] text-white border-violet-600/40 shadow-xs shadow-violet-950/5 inset-ring inset-ring-white/15',
+                        pill: 'bg-black/20 text-violet-100 border-white/10',
+                        room: 'text-violet-200',
+                        subject: 'text-white',
+                        teacher: 'text-violet-100/95',
+                        banner: 'bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white'
+                    };
+                case 'indigo':
+                    return {
+                        card: 'bg-gradient-to-br from-[#1E1B4B] to-[#2E1065] text-white border-indigo-900/50 shadow-xs shadow-indigo-950/10 inset-ring inset-ring-white/10',
+                        pill: 'bg-white/12 text-indigo-100 border-white/10',
+                        room: 'text-indigo-200',
+                        subject: 'text-white',
+                        teacher: 'text-indigo-200/95',
+                        banner: 'bg-gradient-to-r from-[#1E1B4B] to-[#2E1065] text-white'
+                    };
+                case 'black':
+                    return {
+                        card: 'bg-gradient-to-br from-[#0F172A] to-[#09090B] text-white border-slate-800 shadow-xs shadow-black/15 inset-ring inset-ring-white/10',
+                        pill: 'bg-white/12 text-slate-200 border-white/10',
+                        room: 'text-slate-300',
+                        subject: 'text-white',
+                        teacher: 'text-slate-300',
+                        banner: 'bg-gradient-to-r from-[#0F172A] to-[#09090B] text-white'
+                    };
+                default: // 'white'
+                    return {
+                        card: 'bg-[#FFFFFF] text-slate-800 border-[#E2E8F0] hover:border-slate-300/90 shadow-2xs',
+                        pill: 'bg-slate-100 text-slate-600 border-slate-200/70',
+                        room: 'text-slate-500',
+                        subject: 'text-slate-900',
+                        teacher: 'text-slate-600',
+                        banner: 'bg-gradient-to-r from-[#0284C7] to-[#0EA5E9] text-white'
+                    };
+            }
+        }
+
+        // Build HTML for a single 5x4 Week Grid Card
+        function buildWeekGridHtml(weekKey, compactMode = false) {
+            const weekObj = TIMETABLE_DATA.weeks[weekKey];
+            const cellMinHeight = compactMode ? 'min-h-[104px] py-3 px-2' : 'min-h-[124px] py-3.5 px-2.5';
+
+            // 5-Column Sky/Cyan Gradient Header
+            const daysHeaderHtml = weekObj.days.map(day => `
+                <div class="py-3 px-2 text-center">
+                    <div class="font-bold text-xs sm:text-sm tracking-wide text-white">${day.name}</div>
+                    <div class="text-[11px] font-medium text-sky-100/90 mt-0.5">${day.date}</div>
+                </div>
+            `).join('');
+
+            // 4 Rows of 5 Cells
+            const rowsHtml = weekObj.rows.map((rowSlots, rowIdx) => {
+                const cells = rowSlots.map((slot, colIdx) => {
+                    const st = getCellStyles(slot.color);
+                    const slotId = `${weekKey}-${rowIdx}-${colIdx}`;
+                    const hasNotes = (notesStore[slotId] || []).length > 0;
+
+                    // Filter match check
+                    const searchable = `${slot.code} ${slot.room} ${slot.subject} ${slot.teacher}`.toLowerCase();
+                    const isFiltering = searchQuery.length > 0;
+                    const isMatch = isFiltering && searchable.includes(searchQuery);
+
+                    let filterClass = '';
+                    if (isFiltering) {
+                        filterClass = isMatch
+                            ? 'ring-2 ring-amber-400 scale-[1.015] z-10 shadow-md'
+                            : 'opacity-25 grayscale-[35%]';
+                    }
+
+                    return `
+                        <button type="button" onclick="openNoteModal('${weekKey}', ${rowIdx}, ${colIdx})"
+                            class="group relative flex flex-col items-center justify-center text-center rounded-[12px] border transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md cursor-pointer select-none ${cellMinHeight} ${st.card} ${filterClass}">
+                            
+                            <!-- Tiny Indicator Dot if Cell Has Notes -->
+                            ${hasNotes ? `
+                                <span class="absolute top-2.5 right-2.5 flex h-2 w-2" title="Has saved notes">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-300 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-400 ring-2 ring-white/50"></span>
+                                </span>
+                            ` : ''}
+
+                            <!-- 1. Class Code Pill -->
+                            <span class="inline-block text-[10px] sm:text-[11px] font-semibold tracking-tight px-2 py-0.5 rounded-full border leading-tight ${st.pill}">
+                                ${escapeHtml(slot.code)}
+                            </span>
+
+                            <!-- 2. Room Number / Name -->
+                            <span class="text-[11px] sm:text-xs font-medium mt-1.5 leading-tight ${st.room}">
+                                ${escapeHtml(slot.room)}
+                            </span>
+
+                            <!-- 3. Subject Name (Focal Point) -->
+                            <span class="text-xs sm:text-[15px] font-extrabold tracking-tight mt-0.5 leading-snug ${st.subject}">
+                                ${escapeHtml(slot.subject)}
+                            </span>
+
+                            <!-- 4. Teacher Name -->
+                            <span class="text-[11px] sm:text-xs font-medium mt-0.5 leading-tight ${st.teacher}">
+                                ${escapeHtml(slot.teacher)}
+                            </span>
+                        </button>
+                    `;
+                }).join('');
+
+                return `<div class="grid grid-cols-5 gap-2 sm:gap-2.5">${cells}</div>`;
+            }).join('');
+
+            return `
+                <section class="timetable-shell bg-white rounded-[16px] border border-[#E2E8F0] shadow-[0_8px_30px_rgb(15,23,42,0.04)] overflow-hidden">
+                    ${compactMode ? `
+                        <div class="px-4 py-2 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between">
+                            <span class="text-xs font-extrabold uppercase tracking-wider text-slate-800">${weekObj.label}</span>
+                            <span class="text-xs font-medium text-slate-500">${weekObj.dateRange}</span>
+                        </div>
+                    ` : ''}
+                    <div class="overflow-x-auto">
+                        <div class="min-w-[680px]">
+                            <!-- Vibrant Sky/Cyan Gradient Header Row -->
+                            <div class="grid grid-cols-5 bg-gradient-to-r from-[#0284C7] to-[#0EA5E9] divide-x divide-white/15">
+                                ${daysHeaderHtml}
+                            </div>
+                            <!-- Clean Padded Grid Body -->
+                            <div class="p-2.5 sm:p-3.5 bg-[#F8FAFC]/60 space-y-2 sm:space-y-2.5">
+                                ${rowsHtml}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            `;
+        }
+
+        // Render Active View ('A', 'B', or 'BOTH')
+        function renderGrids() {
+            const container = document.getElementById('grids-container');
+            if (viewMode === 'BOTH') {
+                container.innerHTML = buildWeekGridHtml('A', true) + buildWeekGridHtml('B', true);
+            } else {
+                container.innerHTML = buildWeekGridHtml(viewMode, false);
+            }
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+
+        // Open Minimal Lesson Notes Modal
+        function openNoteModal(weekKey, rowIdx, colIdx) {
+            const weekObj = TIMETABLE_DATA.weeks[weekKey];
+            const slot = weekObj.rows[rowIdx][colIdx];
+            const dayObj = weekObj.days[colIdx];
+            const periodName = TIMETABLE_DATA.periods[rowIdx];
+            const st = getCellStyles(slot.color);
+
+            activeNoteSlot = `${weekKey}-${rowIdx}-${colIdx}`;
+
+            const banner = document.getElementById('modal-banner');
+            banner.className = `px-5 py-4 flex items-start justify-between ${st.banner}`;
+
+            document.getElementById('modal-subtitle').textContent = `${weekObj.label} • ${dayObj.name} (${dayObj.date}) • ${periodName}`;
+            document.getElementById('modal-title').textContent = slot.subject;
+            document.getElementById('modal-details').textContent = `${slot.code} • Room ${slot.room} • ${slot.teacher}`;
+
+            renderNotesList();
+
+            const modal = document.getElementById('note-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            if (window.lucide) lucide.createIcons();
+            setTimeout(() => document.getElementById('note-input').focus(), 40);
+        }
+
+        function closeNoteModal() {
+            const modal = document.getElementById('note-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            activeNoteSlot = null;
+            renderGrids();
+        }
+
+        function renderNotesList() {
+            if (!activeNoteSlot) return;
+            const items = notesStore[activeNoteSlot] || [];
+            const listEl = document.getElementById('note-list');
+            const countEl = document.getElementById('note-count');
+
+            countEl.textContent = `${items.length} ${items.length === 1 ? 'note' : 'notes'}`;
+
+            if (items.length === 0) {
+                listEl.innerHTML = `
+                    <li class="text-[11px] text-slate-400 text-center py-3 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                        No reminders yet for this lesson.
+                    </li>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = items.map((text, idx) => `
+                <li class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-700 font-medium">
+                    <span class="truncate">${escapeHtml(text)}</span>
+                    <button type="button" onclick="deleteNote(${idx})" class="text-slate-400 hover:text-rose-600 transition-colors cursor-pointer shrink-0" title="Delete">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                </li>
+            `).join('');
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function addNote(e) {
+            e.preventDefault();
+            if (!activeNoteSlot) return;
+            const input = document.getElementById('note-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            if (!notesStore[activeNoteSlot]) {
+                notesStore[activeNoteSlot] = [];
+            }
+            notesStore[activeNoteSlot].push(text);
+            saveNotes();
+            input.value = '';
+            renderNotesList();
+        }
+
+        function deleteNote(idx) {
+            if (!activeNoteSlot || !notesStore[activeNoteSlot]) return;
+            notesStore[activeNoteSlot].splice(idx, 1);
+            if (notesStore[activeNoteSlot].length === 0) {
+                delete notesStore[activeNoteSlot];
+            }
+            saveNotes();
+            renderNotesList();
+        }
+
+        // Source Code Modal
+        function openSourceModal() {
+            const fullHtml = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            document.getElementById('source-textarea').value = fullHtml;
+            const modal = document.getElementById('source-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function closeSourceModal() {
+            const modal = document.getElementById('source-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function copyHtmlCode() {
+            const ta = document.getElementById('source-textarea');
+            ta.select();
+            document.execCommand('copy');
+            const fb = document.getElementById('copy-feedback');
+            fb.classList.remove('hidden');
+            setTimeout(() => fb.classList.add('hidden'), 2000);
+        }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Keyboard Escape Support
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeNoteModal();
+                closeSourceModal();
+            }
+        });
+
+        // Boot
+        window.addEventListener('DOMContentLoaded', () => {
+            setViewMode('A');
+        });
+    </script>
+</body>
+</html>
