@@ -3,630 +3,1064 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Class 10C Timetable — Full Grid</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Plus Jakarta Sans & Inter Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
-                    },
-                }
+    <title>Class 10C Timetable — Week A &amp; Week B</title>
+    <style>
+        /* ==========================================================================
+           BASE & DESIGN TOKENS (100% Self-Contained, Zero External Dependencies)
+           ========================================================================== */
+        :root {
+            --bg-canvas: #f1f5f9;
+            --surface-white: #ffffff;
+            --surface-subtle: #f8fafc;
+            --border-light: #e2e8f0;
+            --border-mid: #cbd5e1;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --sky-header: #00a6e0;
+            --sky-header-dark: #0284c7;
+            --sky-tint: rgba(0, 166, 224, 0.08);
+            --sky-ring: rgba(0, 166, 224, 0.45);
+            --radius-outer: 16px;
+            --radius-card: 12px;
+            --shadow-shell: 0 10px 30px -5px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+            --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.04);
+            --shadow-card-hover: 0 10px 20px -4px rgba(15, 23, 42, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-primary);
+            line-height: 1.4;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        button, input, textarea {
+            font-family: inherit;
+        }
+
+        /* ==========================================================================
+           TOP CONTROL BAR
+           ========================================================================== */
+        .topbar {
+            background-color: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            z-index: 30;
+        }
+
+        .topbar-inner {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 12px 24px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .brand-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            background: linear-gradient(135deg, var(--sky-header-dark), var(--sky-header));
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 166, 224, 0.25);
+            flex-shrink: 0;
+        }
+
+        .brand-title-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-title {
+            font-size: 1.08rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+        }
+
+        .rotation-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background-color: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+
+        .rotation-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: #0284c7;
+        }
+
+        .controls-center {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .segmented-control {
+            display: inline-flex;
+            background-color: #f1f5f9;
+            padding: 4px;
+            border-radius: 999px;
+            border: 1px solid var(--border-light);
+        }
+
+        .seg-btn {
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+
+        .seg-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .seg-btn.active {
+            background-color: var(--surface-white);
+            color: var(--text-primary);
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.1);
+        }
+
+        .back-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid #7dd3fc;
+            background-color: #f0f9ff;
+            color: #0369a1;
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+
+        .back-pill:hover {
+            background-color: #e0f2fe;
+        }
+
+        .back-pill.hidden {
+            display: none;
+        }
+
+        .actions-right {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 12px;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            border: 1px solid var(--border-light);
+            background-color: var(--surface-white);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.16s ease;
+        }
+
+        .action-btn:hover {
+            background-color: var(--surface-subtle);
+            border-color: var(--border-mid);
+        }
+
+        .action-btn.primary {
+            background-color: var(--text-primary);
+            color: #ffffff;
+            border-color: var(--text-primary);
+        }
+
+        .action-btn.primary:hover {
+            background-color: #1e293b;
+        }
+
+        /* ==========================================================================
+           MAIN TIMETABLE SHELL & CSS GRID
+           ========================================================================== */
+        .main-container {
+            flex: 1;
+            max-width: 1440px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px 24px 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 22px;
+        }
+
+        .timetable-shell {
+            background-color: var(--surface-white);
+            border-radius: var(--radius-outer);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-shell);
+            overflow: hidden;
+        }
+
+        .week-subbanner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 18px;
+            background-color: var(--surface-subtle);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .week-subbanner-title {
+            font-size: 0.82rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-primary);
+        }
+
+        .week-subbanner-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 9px;
+            border-radius: 999px;
+        }
+
+        .badge-active-week {
+            background-color: #dcfce7;
+            color: #15803d;
+        }
+
+        .badge-alt-week {
+            background-color: #f1f5f9;
+            color: #64748b;
+        }
+
+        .grid-scroll-wrap {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        /* Balanced CSS Grid: Period Label Column + 5 Weekday Columns */
+        .timetable-grid {
+            display: grid;
+            grid-template-columns: 110px repeat(5, minmax(150px, 1fr));
+            min-width: 880px;
+        }
+
+        /* Header Row Cells */
+        .grid-header-corner {
+            background-color: var(--sky-header);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 10px;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .grid-day-header {
+            background-color: var(--sky-header);
+            color: #ffffff;
+            padding: 14px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        .grid-day-header:last-child {
+            border-right: none;
+        }
+
+        .grid-day-header.is-today {
+            background: linear-gradient(180deg, #0095ca 0%, #00a6e0 100%);
+            box-shadow: inset 0 -3px 0 #ffffff;
+        }
+
+        .day-name-row {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .day-name {
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+        }
+
+        .today-badge {
+            background-color: #ffffff;
+            color: #0284c7;
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            padding: 2px 7px;
+            border-radius: 999px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Period Row Label Cells */
+        .period-label-cell {
+            background-color: var(--surface-subtle);
+            border-right: 1px solid var(--border-light);
+            border-top: 1px solid var(--border-light);
+            padding: 12px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .period-title {
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .period-sub {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Slot Wrapper Cell */
+        .slot-wrapper {
+            padding: 8px;
+            border-top: 1px solid var(--border-light);
+            border-right: 1px solid #f1f5f9;
+            background-color: #fcfdfe;
+            display: flex;
+            transition: background-color 0.2s ease;
+        }
+
+        .slot-wrapper:nth-child(6n) {
+            border-right: none;
+        }
+
+        .slot-wrapper.is-today-col {
+            background-color: var(--sky-tint);
+            box-shadow: inset 2px 0 0 var(--sky-ring), inset -2px 0 0 var(--sky-ring);
+        }
+
+        /* Inner Rounded Lesson Card */
+        .lesson-card {
+            width: 100%;
+            min-height: 118px;
+            border-radius: var(--radius-card);
+            padding: 12px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 4px;
+            cursor: pointer;
+            position: relative;
+            border: 1px solid transparent;
+            box-shadow: var(--shadow-card);
+            transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.18s ease;
+        }
+
+        .lesson-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-card-hover);
+            z-index: 2;
+        }
+
+        .lesson-card:focus-visible {
+            outline: 3px solid var(--sky-header);
+            outline-offset: 2px;
+        }
+
+        /* Exact Screenshot Subject Color Classes */
+        .card-white {
+            background-color: #ffffff;
+            border-color: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .card-white .card-room {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+
+        .card-white .card-teacher {
+            color: #475569;
+        }
+
+        .card-green {
+            background-color: #0bc952;
+            border-color: #089e40;
+            color: #052e16;
+        }
+
+        .card-green .card-room {
+            background-color: rgba(5, 46, 22, 0.12);
+            color: #052e16;
+        }
+
+        .card-green .card-teacher {
+            color: #064e24;
+        }
+
+        .card-purple {
+            background-color: #7b12d4;
+            border-color: #620ca8;
+            color: #ffffff;
+        }
+
+        .card-purple .card-room {
+            background-color: rgba(255, 255, 255, 0.16);
+            color: #f3e8ff;
+        }
+
+        .card-purple .card-teacher {
+            color: #e9d5ff;
+        }
+
+        .card-indigo {
+            background-color: #210c54;
+            border-color: #16073b;
+            color: #ffffff;
+        }
+
+        .card-indigo .card-room {
+            background-color: rgba(255, 255, 255, 0.14);
+            color: #e0e7ff;
+        }
+
+        .card-indigo .card-teacher {
+            color: #c7d2fe;
+        }
+
+        .card-black {
+            background-color: #09090b;
+            border-color: #27272a;
+            color: #ffffff;
+        }
+
+        .card-black .card-room {
+            background-color: rgba(255, 255, 255, 0.14);
+            color: #e4e4e7;
+        }
+
+        .card-black .card-teacher {
+            color: #d4d4d8;
+        }
+
+        /* Typography Hierarchy Inside Lesson Card */
+        .card-code {
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            line-height: 1.2;
+        }
+
+        .card-room {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 999px;
+            line-height: 1.2;
+        }
+
+        .card-subject {
+            font-size: 0.92rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            line-height: 1.25;
+            margin-top: 1px;
+        }
+
+        .card-teacher {
+            font-size: 0.75rem;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+
+        /* Note Indicator Dot */
+        .note-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #f59e0b;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
+        }
+
+        /* ==========================================================================
+           FOOTER LEGEND
+           ========================================================================== */
+        .footer-legend {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 0 4px;
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .swatch {
+            width: 11px;
+            height: 11px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        /* ==========================================================================
+           MODAL DIALOGS & TOAST
+           ========================================================================== */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 50;
+        }
+
+        .modal-backdrop.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background-color: var(--surface-white);
+            border-radius: 16px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+            width: 100%;
+            max-width: 420px;
+            overflow: hidden;
+            animation: modalPop 0.16s ease-out;
+        }
+
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.96) translateY(6px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            padding: 18px 20px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .modal-meta {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.85;
+        }
+
+        .modal-subject {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-top: 2px;
+        }
+
+        .modal-subdetails {
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-top: 3px;
+            opacity: 0.92;
+        }
+
+        .modal-close {
+            border: none;
+            background: rgba(128, 128, 128, 0.18);
+            color: inherit;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(128, 128, 128, 0.28);
+        }
+
+        .modal-body {
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .modal-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-textarea {
+            width: 100%;
+            min-height: 104px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-mid);
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .modal-textarea:focus {
+            border-color: var(--sky-header);
+            box-shadow: 0 0 0 3px rgba(0, 166, 224, 0.15);
+        }
+
+        .modal-footer {
+            padding: 12px 20px;
+            background-color: var(--surface-subtle);
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #0f172a;
+            color: #ffffff;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 10px 16px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            transition: all 0.2s ease;
+            z-index: 60;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ==========================================================================
+           RESPONSIVE & PRINT STYLES
+           ========================================================================== */
+        @media (max-width: 640px) {
+            .topbar-inner {
+                padding: 10px 14px;
+            }
+            .main-container {
+                padding: 14px 12px 24px;
+            }
+            .timetable-grid {
+                grid-template-columns: 82px repeat(5, minmax(140px, 1fr));
+                min-width: 782px;
+            }
+            .lesson-card {
+                min-height: 106px;
+                padding: 10px 8px;
             }
         }
-    </script>
-    <style>
+
         @media print {
-            .no-print { display: none !important; }
-            body { background: #ffffff !important; padding: 0 !important; }
-            .timetable-shell { box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background-color: #ffffff !important;
+            }
+            .main-container {
+                padding: 0 !important;
+                max-width: 100% !important;
+            }
+            .timetable-shell {
+                box-shadow: none !important;
+                border: 1px solid #cbd5e1 !important;
+            }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
         }
     </style>
 </head>
-<body class="bg-[#F8FAFC] text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
+<body>
 
-    <!-- Minimal Sleek Top Control Bar -->
-    <header class="bg-white/85 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 no-print">
-        <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                
-                <!-- Left: Clean Title & Subtle Subtitle -->
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#0284C7] to-[#0EA5E9] flex items-center justify-center text-white shadow-sm shadow-sky-500/20">
-                        <i data-lucide="calendar-range" class="w-4 h-4"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 leading-none">Class 10C Timetable</h1>
-                        <p id="active-subtitle" class="text-xs font-medium text-slate-500 mt-1">Week A • Monday 9th Nov – Friday 13th Nov</p>
+    <!-- Top Navigation & Rotation Controls -->
+    <header class="topbar no-print">
+        <div class="topbar-inner">
+            <!-- Brand & Live Rotation Status -->
+            <div class="brand-group">
+                <div class="brand-icon" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                </div>
+                <div>
+                    <div class="brand-title-row">
+                        <h1 class="brand-title">Class 10C Timetable</h1>
+                        <span id="rotation-status-pill" class="rotation-pill">
+                            <span class="rotation-dot"></span>
+                            <span id="rotation-status-text">This Week: Week B &bull; Auto-Rotation</span>
+                        </span>
                     </div>
                 </div>
+            </div>
 
-                <!-- Center: Segmented Pill Toggle (Week A | Week B | Both Weeks) + Quick Search -->
-                <div class="flex flex-wrap items-center gap-2.5">
-                    <div class="bg-slate-100/90 p-1 rounded-full border border-slate-200/80 flex items-center shadow-inner" role="group" aria-label="View Mode">
-                        <button id="btn-view-A" onclick="setViewMode('A')" class="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer">
-                            Week A
-                        </button>
-                        <button id="btn-view-B" onclick="setViewMode('B')" class="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer">
-                            Week B
-                        </button>
-                        <button id="btn-view-BOTH" onclick="setViewMode('BOTH')" class="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer">
-                            Both Weeks
-                        </button>
-                    </div>
-
-                    <!-- Compact Filter Input -->
-                    <div class="relative hidden md:block w-48 lg:w-56">
-                        <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                        <input id="search-input" type="text" oninput="handleSearch(this.value)" placeholder="Highlight subject, room..." 
-                            class="w-full pl-8 pr-7 py-1.5 rounded-full bg-slate-100/80 hover:bg-slate-100 focus:bg-white text-slate-800 placeholder-slate-400 text-xs font-medium border border-slate-200/80 focus:border-sky-400 focus:ring-2 focus:ring-sky-500/15 outline-none transition-all">
-                        <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer" title="Clear filter">
-                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                        </button>
-                    </div>
+            <!-- Week Segmented Toggle & Quick Return Pill -->
+            <div class="controls-center">
+                <div class="segmented-control" role="group" aria-label="Timetable Week View">
+                    <button type="button" id="btn-view-A" class="seg-btn" onclick="setViewMode('A')">Week A</button>
+                    <button type="button" id="btn-view-B" class="seg-btn" onclick="setViewMode('B')">Week B</button>
+                    <button type="button" id="btn-view-BOTH" class="seg-btn" onclick="setViewMode('BOTH')">Both Weeks</button>
                 </div>
 
-                <!-- Right: Copy HTML Code & Print Buttons -->
-                <div class="flex items-center gap-2">
-                    <button onclick="openSourceModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition-all cursor-pointer">
-                        <i data-lucide="code-2" class="w-3.5 h-3.5 text-sky-600"></i>
-                        <span>Copy HTML Code</span>
-                    </button>
-                    <button onclick="window.print()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 shadow-2xs transition-all cursor-pointer">
-                        <i data-lucide="printer" class="w-3.5 h-3.5"></i>
-                        <span>Print</span>
-                    </button>
-                </div>
+                <button type="button" id="back-to-current-btn" class="back-pill hidden" onclick="returnToCurrentWeek()">
+                    <span>&larr;</span>
+                    <span id="back-to-current-label">Back to Week B</span>
+                </button>
+            </div>
 
+            <!-- Utility Actions -->
+            <div class="actions-right">
+                <button type="button" class="action-btn" onclick="swapRotationCycle()" title="Swap Week A/B cycle if a school holiday shifted the rotation">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="17 1 21 5 17 9"></polyline>
+                        <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                        <polyline points="7 23 3 19 7 15"></polyline>
+                        <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                    </svg>
+                    <span>Swap A/B</span>
+                </button>
+
+                <button type="button" class="action-btn" onclick="copyStandaloneHtml()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span>Copy HTML</span>
+                </button>
+
+                <button type="button" class="action-btn primary" onclick="window.print()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                        <rect x="6" y="14" width="12" height="8"></rect>
+                    </svg>
+                    <span>Print</span>
+                </button>
             </div>
         </div>
     </header>
 
-    <!-- Full-Grid Timetable Canvas -->
-    <main class="flex-1 max-w-[1440px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-6 flex flex-col justify-center">
-        
-        <!-- Dynamic Timetable Grids Container -->
-        <div id="grids-container" class="space-y-6">
-            <!-- Populated via JS -->
-        </div>
-
-        <!-- Minimal Subtle Footer Legend -->
-        <div class="mt-4 flex flex-wrap items-center justify-between gap-3 px-1 text-[11px] font-medium text-slate-500 no-print">
-            <div class="flex flex-wrap items-center gap-3.5">
-                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#16A34A]"></span> Science</span>
-                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#7C3AED]"></span> RE</span>
-                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#1E1B4B]"></span> Computer Science</span>
-                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#0F172A]"></span> PE</span>
-                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-white border border-slate-300"></span> Core &amp; Humanities</span>
-            </div>
-            <div class="flex items-center gap-1.5 text-slate-400">
-                <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
-                <span>Click any cell to add homework or equipment notes</span>
-            </div>
-        </div>
+    <!-- Full-Grid Timetable Content -->
+    <main class="main-container" id="timetable-container">
+        <!-- Rendered dynamically by JavaScript -->
     </main>
 
-    <!-- Minimal Lesson Quick-Notes Popover / Modal -->
-    <div id="note-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/45 backdrop-blur-xs p-4 no-print">
-        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200/90 w-full max-w-sm overflow-hidden transform transition-all">
-            <div id="modal-banner" class="px-5 py-4 bg-gradient-to-r from-[#0284C7] to-[#0EA5E9] text-white flex items-start justify-between">
+    <!-- Subtle Color Legend -->
+    <footer class="main-container no-print" style="padding-top: 0;">
+        <div class="footer-legend">
+            <div class="legend-items">
+                <span class="legend-item"><span class="swatch" style="background:#0bc952;border:1px solid #089e40;"></span> Science</span>
+                <span class="legend-item"><span class="swatch" style="background:#7b12d4;border:1px solid #620ca8;"></span> RE</span>
+                <span class="legend-item"><span class="swatch" style="background:#210c54;border:1px solid #16073b;"></span> Computer Science</span>
+                <span class="legend-item"><span class="swatch" style="background:#09090b;border:1px solid #27272a;"></span> PE</span>
+                <span class="legend-item"><span class="swatch" style="background:#ffffff;border:1px solid #cbd5e1;"></span> Core &amp; Humanities</span>
+            </div>
+            <div>Click any lesson cell to save homework or equipment notes</div>
+        </div>
+    </footer>
+
+    <!-- Interactive Lesson Notes & Homework Modal -->
+    <div id="lesson-modal" class="modal-backdrop no-print" onclick="handleBackdropClick(event)">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-subject-title">
+            <div id="modal-header" class="modal-header card-white">
                 <div>
-                    <div id="modal-subtitle" class="text-[11px] font-bold uppercase tracking-wider opacity-85">Week A • Monday • Period 1</div>
-                    <h2 id="modal-title" class="text-lg font-extrabold mt-0.5 leading-snug">English</h2>
-                    <p id="modal-details" class="text-xs opacity-90 mt-0.5">10C/En4 • Room 38 • Miss S Ahmed</p>
+                    <div id="modal-meta-text" class="modal-meta">Week B &bull; Tuesday &bull; Period 1</div>
+                    <h2 id="modal-subject-title" class="modal-subject">Geography</h2>
+                    <div id="modal-subdetails-text" class="modal-subdetails">10N/Gg2 &bull; Room 14 &bull; Mr B Cannon</div>
                 </div>
-                <button onclick="closeNoteModal()" class="p-1 rounded-lg bg-white/15 hover:bg-white/25 transition-colors cursor-pointer">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
+                <button type="button" class="modal-close" onclick="closeLessonModal()" aria-label="Close modal">&times;</button>
             </div>
-
-            <div class="p-5 space-y-3">
-                <div class="flex items-center justify-between">
-                    <label class="text-xs font-bold text-slate-700">Homework &amp; Reminders</label>
-                    <span id="note-count" class="text-[11px] font-medium text-slate-400">0 notes</span>
-                </div>
-
-                <form onsubmit="addNote(event)" class="flex gap-2">
-                    <input id="note-input" type="text" placeholder="e.g. Bring PE kit, Calculator..." 
-                        class="flex-1 px-3 py-2 rounded-xl border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 outline-none text-xs font-medium">
-                    <button type="submit" class="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition-colors cursor-pointer">
-                        Add
-                    </button>
-                </form>
-
-                <ul id="note-list" class="space-y-1.5 max-h-40 overflow-y-auto">
-                    <!-- Populated via JS -->
-                </ul>
+            <div class="modal-body">
+                <label for="lesson-note-textarea" class="modal-label">
+                    <span>Homework &amp; Reminders</span>
+                    <span style="font-weight:500;color:#64748b;font-size:0.72rem;">Saved automatically in browser</span>
+                </label>
+                <textarea id="lesson-note-textarea" class="modal-textarea" placeholder="e.g., Bring PE kit, complete Maths worksheet, revision notes..."></textarea>
             </div>
-
-            <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 flex justify-end">
-                <button onclick="closeNoteModal()" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition-colors cursor-pointer">
-                    Done
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Standalone HTML Code Modal -->
-    <div id="source-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 no-print">
-        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden flex flex-col max-h-[82vh]">
-            <div class="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="file-code-2" class="w-4 h-4 text-sky-400"></i>
-                    <span class="text-sm font-bold">Standalone HTML Source Code</span>
-                </div>
-                <button onclick="closeSourceModal()" class="p-1 rounded-lg hover:bg-white/15 transition-colors cursor-pointer">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
-            </div>
-            <div class="p-4 bg-slate-950 flex-1 overflow-y-auto">
-                <textarea id="source-textarea" readonly class="w-full h-72 bg-slate-950 text-sky-300 font-mono text-[11px] leading-relaxed focus:outline-none resize-none"></textarea>
-            </div>
-            <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-                <span class="text-xs text-slate-500">Save as <code class="bg-slate-200/80 px-1.5 py-0.5 rounded font-mono text-slate-800">timetable.html</code></span>
-                <div class="flex items-center gap-3">
-                    <span id="copy-feedback" class="text-xs font-bold text-emerald-600 hidden">Copied!</span>
-                    <button onclick="copyHtmlCode()" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white shadow-xs transition-colors cursor-pointer">
-                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                        <span>Copy Code</span>
-                    </button>
+            <div class="modal-footer">
+                <button type="button" class="action-btn" onclick="clearCurrentLessonNote()" style="color:#dc2626;">Clear Note</button>
+                <div style="display:flex;gap:8px;">
+                    <button type="button" class="action-btn" onclick="closeLessonModal()">Cancel</button>
+                    <button type="button" class="action-btn primary" onclick="saveCurrentLessonNote()">Save Note</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script>
         /**
          * ============================================================================
-         * EXACT CLASS 10C TIMETABLE DATA — WEEK A & WEEK B
+         * EXACT CLASS 10C TIMETABLE DATA (STRICTLY VERIFIED, NO HARDCODED DATES)
          * ============================================================================
          */
+        const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
+        const PERIOD_ROWS = [
+            { label: "Registration", sub: "AM Form" },
+            { label: "Period 1", sub: "Lesson 1" },
+            { label: "Period 2", sub: "Lesson 2" },
+            { label: "Period 3", sub: "Lesson 3" }
+        ];
+
         const TIMETABLE_DATA = {
-            periods: ["Registration", "Period 1", "Period 2", "Period 3"],
-            weeks: {
-                A: {
-                    label: "Week A",
-                    dateRange: "Monday 9th Nov – Friday 13th Nov",
-                    days: [
-                        { name: "Monday", date: "9th Nov" },
-                        { name: "Tuesday", date: "10th Nov" },
-                        { name: "Wednesday", date: "11th Nov" },
-                        { name: "Thursday", date: "12th Nov" },
-                        { name: "Friday", date: "13th Nov" }
+            A: {
+                label: "Week A",
+                rows: [
+                    // Row 1 (Registration)
+                    [
+                        { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
+                        { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
+                        { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
+                        { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
+                        { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" }
                     ],
-                    rows: [
-                        // Row 1: Registration
-                        [
-                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
-                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
-                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
-                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
-                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" }
-                        ],
-                        // Row 2: Period 1
-                        [
-                            { code: "10C/En4", room: "38", subject: "English", teacher: "Miss S Ahmed", color: "white" },
-                            { code: "10C/Ma3", room: "T4", subject: "Maths", teacher: "Mrs H Begum", color: "white" },
-                            { code: "10N/Gg2", room: "14", subject: "Geography", teacher: "Mr B Cannon", color: "white" },
-                            { code: "10C/Ct2", room: "24", subject: "Citizenship", teacher: "Miss S Knowles", color: "white" },
-                            { code: "10N/Gg2", room: "14", subject: "Geography", teacher: "Mr B Cannon", color: "white" }
-                        ],
-                        // Row 3: Period 2
-                        [
-                            { code: "10C/Ma3", room: "T4", subject: "Maths", teacher: "Mrs H Begum", color: "white" },
-                            { code: "10K/Ts1", room: "Science SC3", subject: "Triple Science", teacher: "Mr D Way", color: "white" },
-                            { code: "10K/Ts1", room: "10", subject: "Triple Science", teacher: "Mr D Way", color: "white" },
-                            { code: "10C/Sc3", room: "Science SC1", subject: "Science", teacher: "Mr L Bennett", color: "green" },
-                            { code: "Y10C Boys Set 1-4", room: "Gos PE 3", subject: "PE", teacher: "Mrs J Barker", color: "black" }
-                        ],
-                        // Row 4: Period 3
-                        [
-                            { code: "Y10C Boys Set 1-4", room: "Gos PE 3", subject: "PE", teacher: "Mrs J Barker", color: "black" },
-                            { code: "10C/En4", room: "38", subject: "English", teacher: "Miss S Ahmed", color: "white" },
-                            { code: "10C/En4", room: "38", subject: "English", teacher: "Miss S Ahmed", color: "white" },
-                            { code: "10J/Cs1", room: "45", subject: "Computer Science", teacher: "Mr R Hylton", color: "indigo" },
-                            { code: "10C/Re2", room: "32", subject: "RE", teacher: "Miss A Shahab", color: "purple" }
-                        ]
-                    ]
-                },
-                B: {
-                    label: "Week B",
-                    dateRange: "Monday 16th Nov – Friday 20th Nov",
-                    days: [
-                        { name: "Monday", date: "16th Nov" },
-                        { name: "Tuesday", date: "17th Nov" },
-                        { name: "Wednesday", date: "18th Nov" },
-                        { name: "Thursday", date: "19th Nov" },
-                        { name: "Friday", date: "20th Nov" }
+                    // Row 2 (Period 1)
+                    [
+                        { code: "10C/En4", room: "38", subject: "English", teacher: "Miss S Ahmed", color: "white" },
+                        { code: "10C/Ma3", room: "T4", subject: "Maths", teacher: "Mrs H Begum", color: "white" },
+                        { code: "10N/Gg2", room: "14", subject: "Geography", teacher: "Mr B Cannon", color: "white" },
+                        { code: "10C/Ct2", room: "24", subject: "Citizenship", teacher: "Miss S Knowles", color: "white" },
+                        { code: "10N/Gg2", room: "14", subject: "Geography", teacher: "Mr B Cannon", color: "white" }
                     ],
-                    rows: [
-                        // Row 1: Registration
-                        [
-                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
-                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
-                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss T Sultana", color: "white" },
-                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss T Sultana", color: "white" },
-                            { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss T Sultana", color: "white" }
-                        ],
-                        // Row 2: Period 1
-                        [
-                            { code: "10C/Re2", room: "32", subject: "RE", teacher: "Miss A Shahab", color: "purple" },
-                            { code: "10N/Gg2", room: "14", subject: "Geography", teacher: "Mr B Cannon", color: "white" },
-                            { code: "10C/Sc3", room: "Science SC6", subject: "Science", teacher: "Mrs A Whyte", color: "green" },
-                            { code: "10C/Sc3", room: "Science SC1", subject: "Science", teacher: "Mr L Bennett", color: "green" },
-                            { code: "10C/Ma3", room: "T9", subject: "Maths", teacher: "Ms A Begum", color: "white" }
-                        ],
-                        // Row 3: Period 2
-                        [
-                            { code: "10C/Sc3", room: "Science SC6", subject: "Science", teacher: "Mrs A Whyte", color: "green" },
-                            { code: "10C/En4", room: "38", subject: "English", teacher: "Miss S Ahmed", color: "white" },
-                            { code: "10C/En4", room: "38", subject: "English", teacher: "Miss S Ahmed", color: "white" },
-                            { code: "10K/Ts1", room: "Science SC3", subject: "Triple Science", teacher: "Mr D Way", color: "white" },
-                            { code: "10J/Cs1", room: "45", subject: "Computer Science", teacher: "Mr R Hylton", color: "indigo" }
-                        ],
-                        // Row 4: Period 3
-                        [
-                            { code: "10C/Ma3", room: "T9", subject: "Maths", teacher: "Ms A Begum", color: "white" },
-                            { code: "10C/Sc3", room: "Science SC1", subject: "Science", teacher: "Mr L Bennett", color: "green" },
-                            { code: "10C/Ma3", room: "T9", subject: "Maths", teacher: "Ms A Begum", color: "white" },
-                            { code: "10J/Cs1", room: "45", subject: "Computer Science", teacher: "Mr R Hylton", color: "indigo" },
-                            { code: "10C/Re2", room: "32", subject: "RE", teacher: "Miss A Shahab", color: "purple" }
-                        ]
+                    // Row 3 (Period 2)
+                    [
+                        { code: "10C/Ma3", room: "T4", subject: "Maths", teacher: "Mrs H Begum", color: "white" },
+                        { code: "10K/Ts1", room: "Science SC3", subject: "Triple Science", teacher: "Mr D Way", color: "white" },
+                        { code: "10K/Ts1", room: "10", subject: "Triple Science", teacher: "Mr D Way", color: "white" },
+                        { code: "10C/Sc3", room: "Science SC1", subject: "Science", teacher: "Mr L Bennett", color: "green" },
+                        { code: "Y10C Boys Set 1-4", room: "Gos PE 3", subject: "PE", teacher: "Mrs J Barker", color: "black" }
+                    ],
+                    // Row 4 (Period 3)
+                    [
+                        { code: "Y10C Boys Set 1-4", room: "Gos PE 3", subject: "PE", teacher: "Mrs J Barker", color: "black" },
+                        { code: "10C/En4", room: "38", subject: "English", teacher: "Miss S Ahmed", color: "white" },
+                        { code: "10C/En4", room: "38", subject: "English", teacher: "Miss S Ahmed", color: "white" },
+                        { code: "10J/Cs1", room: "45", subject: "Computer Science", teacher: "Mr R Hylton", color: "indigo" },
+                        { code: "10C/Re2", room: "32", subject: "RE", teacher: "Miss A Shahab", color: "purple" }
                     ]
-                }
+                ]
+            },
+            B: {
+                label: "Week B",
+                rows: [
+                    // Row 1 (Registration)
+                    [
+                        { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
+                        { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss S Knowles", color: "white" },
+                        { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss T Sultana", color: "white" },
+                        { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss T Sultana", color: "white" },
+                        { code: "10C/Rg2", room: "24", subject: "Registration", teacher: "Miss T Sultana", color: "white" }
+                    ],
+                    // Row 2 (Period 1)
+                    [
+                        { code: "10C/Re2", room: "32", subject: "RE", teacher: "Miss A Shahab", color: "purple" },
+                        { code: "10N/Gg2", room: "14", subject: "Geography", teacher: "Mr B Cannon", color: "white" },
+                        { code: "10C/Sc3", room: "Science SC6", subject: "Science", teacher: "Mrs A Whyte", color: "green" },
+                        { code: "10C/Sc3", room: "Science SC1", subject: "Science", teacher: "Mr L Bennett", color: "green" },
+                        { code: "10C/Ma3", room: "T9", subject: "Maths", teacher: "Ms A Begum", color: "white" }
+                    ],
+                    // Row 3 (Period 2)
+                    [
+                        { code: "10C/Sc3", room: "Science SC6", subject: "Science", teacher: "Mrs A Whyte", color: "green" },
+                        { code: "10C/En4", room: "38", subject: "English", teacher: "Miss S Ahmed", color: "white" },
+                        { code: "10C/En4", room: "38", subject: "English", teacher: "Miss S Ahmed", color: "white" },
+                        { code: "10K/Ts1", room: "Science SC3", subject: "Triple Science", teacher: "Mr D Way", color: "white" },
+                        { code: "10J/Cs1", room: "45", subject: "Computer Science", teacher: "Mr R Hylton", color: "indigo" }
+                    ],
+                    // Row 4 (Period 3)
+                    [
+                        { code: "10C/Ma3", room: "T9", subject: "Maths", teacher: "Ms A Begum", color: "white" },
+                        { code: "10C/Sc3", room: "Science SC1", subject: "Science", teacher: "Mr L Bennett", color: "green" },
+                        { code: "10C/Ma3", room: "T9", subject: "Maths", teacher: "Ms A Begum", color: "white" },
+                        { code: "10J/Cs1", room: "45", subject: "Computer Science", teacher: "Mr R Hylton", color: "indigo" },
+                        { code: "10C/Re2", room: "32", subject: "RE", teacher: "Miss A Shahab", color: "purple" }
+                    ]
+                ]
             }
         };
 
-        // Application State
-        let viewMode = 'A'; // 'A' | 'B' | 'BOTH'
-        let searchQuery = '';
-        let activeNoteSlot = null;
-        let notesStore = loadNotes();
+        /**
+         * ============================================================================
+         * AUTOMATIC 2-WEEK A/B ROTATION & TODAY DETECTION
+         * Anchor: Monday, Nov 16, 2026 (so Tuesday, Nov 17, 2026 = Week B)
+         * ============================================================================
+         */
+        const STORAGE_SWAP_KEY = "class10c_rotation_swapped_v1";
+        const STORAGE_NOTES_KEY = "class10c_lesson_notes_v1";
+        const MS_PER_WEEK = 604800000; // 7 * 24 * 60 * 60 * 1000
 
-        function loadNotes() {
+        function getMondayUTC(dateObj) {
+            const utcYear = dateObj.getFullYear();
+            const utcMonth = dateObj.getMonth();
+            const utcDate = dateObj.getDate();
+            const dayOfWeek = dateObj.getDay(); // 0 (Sun) .. 6 (Sat)
+            // Shift so Monday = 0, ..., Sunday = 6
+            const diffFromMonday = (dayOfWeek + 6) % 7;
+            return Date.UTC(utcYear, utcMonth, utcDate - diffFromMonday);
+        }
+
+        function isRotationSwapped() {
             try {
-                const raw = localStorage.getItem('class_10c_aesthetic_notes_v1');
+                return localStorage.getItem(STORAGE_SWAP_KEY) === "true";
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function getActiveRotatedWeek() {
+            const anchorMondayNov16_2026UTC = Date.UTC(2026, 10, 16); // Month is 0-indexed (10 = November)
+            const currentMondayUTC = getMondayUTC(new Date());
+            const weekDiff = Math.floor((currentMondayUTC - anchorMondayNov16_2026UTC) / MS_PER_WEEK);
+            const isEvenWeek = (((weekDiff % 2) + 2) % 2) === 0;
+            let baseWeek = isEvenWeek ? "B" : "A";
+
+            if (isRotationSwapped()) {
+                baseWeek = baseWeek === "B" ? "A" : "B";
+            }
+            return baseWeek;
+        }
+
+        function getTodayWeekdayIndex() {
+            // Returns 0 for Monday .. 4 for Friday, or -1 on weekends
+            const day = new Date().getDay();
+            return (day >= 1 && day <= 5) ? (day - 1) : -1;
+        }
+
+        /**
+         * ============================================================================
+         * APPLICATION STATE & RENDERING
+         * ============================================================================
+         */
+        let currentRotatedWeek = getActiveRotatedWeek();
+        let viewMode = currentRotatedWeek; // Defaults to active rotated week ('B' on Nov 17, 2026)
+        let activeModalSlotKey = null;
+        let lessonNotes = loadLessonNotes();
+
+        function loadLessonNotes() {
+            try {
+                const raw = localStorage.getItem(STORAGE_NOTES_KEY);
                 return raw ? JSON.parse(raw) : {};
             } catch (e) {
                 return {};
             }
         }
 
-        function saveNotes() {
+        function persistLessonNotes() {
             try {
-                localStorage.setItem('class_10c_aesthetic_notes_v1', JSON.stringify(notesStore));
+                localStorage.setItem(STORAGE_NOTES_KEY, JSON.stringify(lessonNotes));
             } catch (e) {
-                console.warn('Unable to save notes:', e);
+                console.warn("Could not save notes to localStorage:", e);
             }
         }
 
-        // Switch between Week A, Week B, and Both Weeks
-        function setViewMode(mode) {
-            viewMode = mode;
-            const subtitleEl = document.getElementById('active-subtitle');
-
-            if (mode === 'A') {
-                subtitleEl.textContent = "Week A • Monday 9th Nov – Friday 13th Nov";
-            } else if (mode === 'B') {
-                subtitleEl.textContent = "Week B • Monday 16th Nov – Friday 20th Nov";
-            } else {
-                subtitleEl.textContent = "Full 2-Week Overview • Week A & Week B";
-            }
-
-            ['A', 'B', 'BOTH'].forEach(key => {
-                const btn = document.getElementById(`btn-view-${key}`);
-                if (key === mode) {
-                    btn.className = "px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold bg-white text-slate-900 shadow-xs transition-all duration-200 cursor-pointer";
-                } else {
-                    btn.className = "px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-900 transition-all duration-200 cursor-pointer";
-                }
-            });
-
-            renderGrids();
-        }
-
-        // Search Filter
-        function handleSearch(val) {
-            searchQuery = val.trim().toLowerCase();
-            const clearBtn = document.getElementById('clear-search-btn');
-            if (searchQuery.length > 0) {
-                clearBtn.classList.remove('hidden');
-            } else {
-                clearBtn.classList.add('hidden');
-            }
-            renderGrids();
-        }
-
-        function clearSearch() {
-            const input = document.getElementById('search-input');
-            input.value = '';
-            handleSearch('');
-            input.focus();
-        }
-
-        // Aesthetic Color Tokens per Subject Color
-        function getCellStyles(color) {
-            switch (color) {
-                case 'green':
-                    return {
-                        card: 'bg-gradient-to-br from-[#16A34A] to-[#15803D] text-white border-emerald-600/40 shadow-xs shadow-emerald-950/5 inset-ring inset-ring-white/15',
-                        pill: 'bg-black/20 text-emerald-50 border-white/10',
-                        room: 'text-emerald-100',
-                        subject: 'text-white',
-                        teacher: 'text-emerald-100/95',
-                        banner: 'bg-gradient-to-r from-[#16A34A] to-[#15803D] text-white'
-                    };
-                case 'purple':
-                    return {
-                        card: 'bg-gradient-to-br from-[#7C3AED] to-[#6D28D9] text-white border-violet-600/40 shadow-xs shadow-violet-950/5 inset-ring inset-ring-white/15',
-                        pill: 'bg-black/20 text-violet-100 border-white/10',
-                        room: 'text-violet-200',
-                        subject: 'text-white',
-                        teacher: 'text-violet-100/95',
-                        banner: 'bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white'
-                    };
-                case 'indigo':
-                    return {
-                        card: 'bg-gradient-to-br from-[#1E1B4B] to-[#2E1065] text-white border-indigo-900/50 shadow-xs shadow-indigo-950/10 inset-ring inset-ring-white/10',
-                        pill: 'bg-white/12 text-indigo-100 border-white/10',
-                        room: 'text-indigo-200',
-                        subject: 'text-white',
-                        teacher: 'text-indigo-200/95',
-                        banner: 'bg-gradient-to-r from-[#1E1B4B] to-[#2E1065] text-white'
-                    };
-                case 'black':
-                    return {
-                        card: 'bg-gradient-to-br from-[#0F172A] to-[#09090B] text-white border-slate-800 shadow-xs shadow-black/15 inset-ring inset-ring-white/10',
-                        pill: 'bg-white/12 text-slate-200 border-white/10',
-                        room: 'text-slate-300',
-                        subject: 'text-white',
-                        teacher: 'text-slate-300',
-                        banner: 'bg-gradient-to-r from-[#0F172A] to-[#09090B] text-white'
-                    };
-                default: // 'white'
-                    return {
-                        card: 'bg-[#FFFFFF] text-slate-800 border-[#E2E8F0] hover:border-slate-300/90 shadow-2xs',
-                        pill: 'bg-slate-100 text-slate-600 border-slate-200/70',
-                        room: 'text-slate-500',
-                        subject: 'text-slate-900',
-                        teacher: 'text-slate-600',
-                        banner: 'bg-gradient-to-r from-[#0284C7] to-[#0EA5E9] text-white'
-                    };
-            }
-        }
-
-        // Build HTML for a single 5x4 Week Grid Card
-        function buildWeekGridHtml(weekKey, compactMode = false) {
-            const weekObj = TIMETABLE_DATA.weeks[weekKey];
-            const cellMinHeight = compactMode ? 'min-h-[104px] py-3 px-2' : 'min-h-[124px] py-3.5 px-2.5';
-
-            // 5-Column Sky/Cyan Gradient Header
-            const daysHeaderHtml = weekObj.days.map(day => `
-                <div class="py-3 px-2 text-center">
-                    <div class="font-bold text-xs sm:text-sm tracking-wide text-white">${day.name}</div>
-                    <div class="text-[11px] font-medium text-sky-100/90 mt-0.5">${day.date}</div>
-                </div>
-            `).join('');
-
-            // 4 Rows of 5 Cells
-            const rowsHtml = weekObj.rows.map((rowSlots, rowIdx) => {
-                const cells = rowSlots.map((slot, colIdx) => {
-                    const st = getCellStyles(slot.color);
-                    const slotId = `${weekKey}-${rowIdx}-${colIdx}`;
-                    const hasNotes = (notesStore[slotId] || []).length > 0;
-
-                    // Filter match check
-                    const searchable = `${slot.code} ${slot.room} ${slot.subject} ${slot.teacher}`.toLowerCase();
-                    const isFiltering = searchQuery.length > 0;
-                    const isMatch = isFiltering && searchable.includes(searchQuery);
-
-                    let filterClass = '';
-                    if (isFiltering) {
-                        filterClass = isMatch
-                            ? 'ring-2 ring-amber-400 scale-[1.015] z-10 shadow-md'
-                            : 'opacity-25 grayscale-[35%]';
-                    }
-
-                    return `
-                        <button type="button" onclick="openNoteModal('${weekKey}', ${rowIdx}, ${colIdx})"
-                            class="group relative flex flex-col items-center justify-center text-center rounded-[12px] border transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md cursor-pointer select-none ${cellMinHeight} ${st.card} ${filterClass}">
-                            
-                            <!-- Tiny Indicator Dot if Cell Has Notes -->
-                            ${hasNotes ? `
-                                <span class="absolute top-2.5 right-2.5 flex h-2 w-2" title="Has saved notes">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-300 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-400 ring-2 ring-white/50"></span>
-                                </span>
-                            ` : ''}
-
-                            <!-- 1. Class Code Pill -->
-                            <span class="inline-block text-[10px] sm:text-[11px] font-semibold tracking-tight px-2 py-0.5 rounded-full border leading-tight ${st.pill}">
-                                ${escapeHtml(slot.code)}
-                            </span>
-
-                            <!-- 2. Room Number / Name -->
-                            <span class="text-[11px] sm:text-xs font-medium mt-1.5 leading-tight ${st.room}">
-                                ${escapeHtml(slot.room)}
-                            </span>
-
-                            <!-- 3. Subject Name (Focal Point) -->
-                            <span class="text-xs sm:text-[15px] font-extrabold tracking-tight mt-0.5 leading-snug ${st.subject}">
-                                ${escapeHtml(slot.subject)}
-                            </span>
-
-                            <!-- 4. Teacher Name -->
-                            <span class="text-[11px] sm:text-xs font-medium mt-0.5 leading-tight ${st.teacher}">
-                                ${escapeHtml(slot.teacher)}
-                            </span>
-                        </button>
-                    `;
-                }).join('');
-
-                return `<div class="grid grid-cols-5 gap-2 sm:gap-2.5">${cells}</div>`;
-            }).join('');
-
-            return `
-                <section class="timetable-shell bg-white rounded-[16px] border border-[#E2E8F0] shadow-[0_8px_30px_rgb(15,23,42,0.04)] overflow-hidden">
-                    ${compactMode ? `
-                        <div class="px-4 py-2 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between">
-                            <span class="text-xs font-extrabold uppercase tracking-wider text-slate-800">${weekObj.label}</span>
-                            <span class="text-xs font-medium text-slate-500">${weekObj.dateRange}</span>
-                        </div>
-                    ` : ''}
-                    <div class="overflow-x-auto">
-                        <div class="min-w-[680px]">
-                            <!-- Vibrant Sky/Cyan Gradient Header Row -->
-                            <div class="grid grid-cols-5 bg-gradient-to-r from-[#0284C7] to-[#0EA5E9] divide-x divide-white/15">
-                                ${daysHeaderHtml}
-                            </div>
-                            <!-- Clean Padded Grid Body -->
-                            <div class="p-2.5 sm:p-3.5 bg-[#F8FAFC]/60 space-y-2 sm:space-y-2.5">
-                                ${rowsHtml}
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            `;
-        }
-
-        // Render Active View ('A', 'B', or 'BOTH')
-        function renderGrids() {
-            const container = document.getElementById('grids-container');
-            if (viewMode === 'BOTH') {
-                container.innerHTML = buildWeekGridHtml('A', true) + buildWeekGridHtml('B', true);
-            } else {
-                container.innerHTML = buildWeekGridHtml(viewMode, false);
-            }
-            if (window.lucide) {
-                lucide.createIcons();
-            }
-        }
-
-        // Open Minimal Lesson Notes Modal
-        function openNoteModal(weekKey, rowIdx, colIdx) {
-            const weekObj = TIMETABLE_DATA.weeks[weekKey];
-            const slot = weekObj.rows[rowIdx][colIdx];
-            const dayObj = weekObj.days[colIdx];
-            const periodName = TIMETABLE_DATA.periods[rowIdx];
-            const st = getCellStyles(slot.color);
-
-            activeNoteSlot = `${weekKey}-${rowIdx}-${colIdx}`;
-
-            const banner = document.getElementById('modal-banner');
-            banner.className = `px-5 py-4 flex items-start justify-between ${st.banner}`;
-
-            document.getElementById('modal-subtitle').textContent = `${weekObj.label} • ${dayObj.name} (${dayObj.date}) • ${periodName}`;
-            document.getElementById('modal-title').textContent = slot.subject;
-            document.getElementById('modal-details').textContent = `${slot.code} • Room ${slot.room} • ${slot.teacher}`;
-
-            renderNotesList();
-
-            const modal = document.getElementById('note-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            if (window.lucide) lucide.createIcons();
-            setTimeout(() => document.getElementById('note-input').focus(), 40);
-        }
-
-        function closeNoteModal() {
-            const modal = document.getElementById('note-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            activeNoteSlot = null;
-            renderGrids();
-        }
-
-        function renderNotesList() {
-            if (!activeNoteSlot) return;
-            const items = notesStore[activeNoteSlot] || [];
-            const listEl = document.getElementById('note-list');
-            const countEl = document.getElementById('note-count');
-
-            countEl.textContent = `${items.length} ${items.length === 1 ? 'note' : 'notes'}`;
-
-            if (items.length === 0) {
-                listEl.innerHTML = `
-                    <li class="text-[11px] text-slate-400 text-center py-3 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                        No reminders yet for this lesson.
-                    </li>
-                `;
-                return;
-            }
-
-            listEl.innerHTML = items.map((text, idx) => `
-                <li class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-700 font-medium">
-                    <span class="truncate">${escapeHtml(text)}</span>
-                    <button type="button" onclick="deleteNote(${idx})" class="text-slate-400 hover:text-rose-600 transition-colors cursor-pointer shrink-0" title="Delete">
-                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                    </button>
-                </li>
-            `).join('');
-
-            if (window.lucide) lucide.createIcons();
-        }
-
-        function addNote(e) {
-            e.preventDefault();
-            if (!activeNoteSlot) return;
-            const input = document.getElementById('note-input');
-            const text = input.value.trim();
-            if (!text) return;
-
-            if (!notesStore[activeNoteSlot]) {
-                notesStore[activeNoteSlot] = [];
-            }
-            notesStore[activeNoteSlot].push(text);
-            saveNotes();
-            input.value = '';
-            renderNotesList();
-        }
-
-        function deleteNote(idx) {
-            if (!activeNoteSlot || !notesStore[activeNoteSlot]) return;
-            notesStore[activeNoteSlot].splice(idx, 1);
-            if (notesStore[activeNoteSlot].length === 0) {
-                delete notesStore[activeNoteSlot];
-            }
-            saveNotes();
-            renderNotesList();
-        }
-
-        // Source Code Modal
-        function openSourceModal() {
-            const fullHtml = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
-            document.getElementById('source-textarea').value = fullHtml;
-            const modal = document.getElementById('source-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            if (window.lucide) lucide.createIcons();
-        }
-
-        function closeSourceModal() {
-            const modal = document.getElementById('source-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        function copyHtmlCode() {
-            const ta = document.getElementById('source-textarea');
-            ta.select();
-            document.execCommand('copy');
-            const fb = document.getElementById('copy-feedback');
-            fb.classList.remove('hidden');
-            setTimeout(() => fb.classList.add('hidden'), 2000);
-        }
-
-        function escapeHtml(str) {
-            return String(str || '')
+        function escapeHtml(value) {
+            return String(value || "")
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;")
@@ -634,17 +1068,255 @@
                 .replace(/'/g, "&#039;");
         }
 
-        // Keyboard Escape Support
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeNoteModal();
-                closeSourceModal();
+        function showToast(message) {
+            const toastEl = document.getElementById("toast");
+            toastEl.textContent = message;
+            toastEl.classList.add("show");
+            clearTimeout(window.__toastTimer);
+            window.__toastTimer = setTimeout(() => {
+                toastEl.classList.remove("show");
+            }, 2400);
+        }
+
+        function updateHeaderControls() {
+            currentRotatedWeek = getActiveRotatedWeek();
+
+            // Update status pill
+            document.getElementById("rotation-status-text").textContent =
+                `This Week: Week ${currentRotatedWeek} \u2022 Auto-Rotation`;
+
+            // Update segmented buttons
+            ["A", "B", "BOTH"].forEach((mode) => {
+                const btn = document.getElementById(`btn-view-${mode}`);
+                if (mode === viewMode) {
+                    btn.classList.add("active");
+                } else {
+                    btn.classList.remove("active");
+                }
+            });
+
+            // Show quick return pill when viewing the inactive week
+            const backBtn = document.getElementById("back-to-current-btn");
+            const backLabel = document.getElementById("back-to-current-label");
+            if (viewMode !== "BOTH" && viewMode !== currentRotatedWeek) {
+                backLabel.textContent = `Back to Week ${currentRotatedWeek}`;
+                backBtn.classList.remove("hidden");
+            } else {
+                backBtn.classList.add("hidden");
+            }
+        }
+
+        function setViewMode(mode) {
+            viewMode = mode;
+            updateHeaderControls();
+            renderTimetable();
+        }
+
+        function returnToCurrentWeek() {
+            setViewMode(currentRotatedWeek);
+        }
+
+        function swapRotationCycle() {
+            try {
+                const nextState = !isRotationSwapped();
+                localStorage.setItem(STORAGE_SWAP_KEY, String(nextState));
+            } catch (e) {
+                console.warn("Unable to toggle rotation swap:", e);
+            }
+            currentRotatedWeek = getActiveRotatedWeek();
+            viewMode = currentRotatedWeek;
+            updateHeaderControls();
+            renderTimetable();
+            showToast(`Rotation calibrated: This week is now Week ${currentRotatedWeek}`);
+        }
+
+        function buildWeekShellHtml(weekKey, showSubbanner) {
+            const weekData = TIMETABLE_DATA[weekKey];
+            const todayIdx = getTodayWeekdayIndex();
+            const isCurrentWeek = weekKey === currentRotatedWeek;
+
+            let subbannerHtml = "";
+            if (showSubbanner) {
+                const badgeClass = isCurrentWeek ? "badge-active-week" : "badge-alt-week";
+                const badgeText = isCurrentWeek ? "Active This Week" : "Alternating Week";
+                subbannerHtml = `
+                    <div class="week-subbanner">
+                        <span class="week-subbanner-title">${escapeHtml(weekData.label)}</span>
+                        <span class="week-subbanner-badge ${badgeClass}">${badgeText}</span>
+                    </div>
+                `;
+            }
+
+            // Build Header Row (Corner + Monday..Friday)
+            let headerCellsHtml = `<div class="grid-header-corner">Period</div>`;
+            DAYS_OF_WEEK.forEach((dayName, colIdx) => {
+                const isToday = colIdx === todayIdx;
+                headerCellsHtml += `
+                    <div class="grid-day-header ${isToday ? "is-today" : ""}">
+                        <div class="day-name-row">
+                            <span class="day-name">${dayName}</span>
+                            ${isToday ? `<span class="today-badge">TODAY</span>` : ""}
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Build 4 Period Rows
+            let bodyRowsHtml = "";
+            weekData.rows.forEach((rowSlots, rowIdx) => {
+                const periodMeta = PERIOD_ROWS[rowIdx];
+                bodyRowsHtml += `
+                    <div class="period-label-cell">
+                        <div class="period-title">${escapeHtml(periodMeta.label)}</div>
+                        <div class="period-sub">${escapeHtml(periodMeta.sub)}</div>
+                    </div>
+                `;
+
+                rowSlots.forEach((slot, colIdx) => {
+                    const isTodayCol = colIdx === todayIdx;
+                    const slotKey = `${weekKey}-${rowIdx}-${colIdx}`;
+                    const hasNote = Boolean(lessonNotes[slotKey] && lessonNotes[slotKey].trim().length > 0);
+                    const colorClass = `card-${slot.color || "white"}`;
+
+                    bodyRowsHtml += `
+                        <div class="slot-wrapper ${isTodayCol ? "is-today-col" : ""}">
+                            <button type="button"
+                                class="lesson-card ${colorClass}"
+                                onclick="openLessonModal('${weekKey}', ${rowIdx}, ${colIdx})"
+                                aria-label="${escapeHtml(slot.subject)} with ${escapeHtml(slot.teacher)} in room ${escapeHtml(slot.room)}">
+                                ${hasNote ? `<span class="note-indicator" title="Saved homework/note"></span>` : ""}
+                                <span class="card-code">${escapeHtml(slot.code)}</span>
+                                <span class="card-room">${escapeHtml(slot.room)}</span>
+                                <span class="card-subject">${escapeHtml(slot.subject)}</span>
+                                <span class="card-teacher">${escapeHtml(slot.teacher)}</span>
+                            </button>
+                        </div>
+                    `;
+                });
+            });
+
+            return `
+                <section class="timetable-shell" aria-label="${escapeHtml(weekData.label)} Timetable">
+                    ${subbannerHtml}
+                    <div class="grid-scroll-wrap">
+                        <div class="timetable-grid">
+                            ${headerCellsHtml}
+                            ${bodyRowsHtml}
+                        </div>
+                    </div>
+                </section>
+            `;
+        }
+
+        function renderTimetable() {
+            const container = document.getElementById("timetable-container");
+            if (viewMode === "BOTH") {
+                container.innerHTML =
+                    buildWeekShellHtml("A", true) +
+                    buildWeekShellHtml("B", true);
+            } else {
+                container.innerHTML = buildWeekShellHtml(viewMode, false);
+            }
+        }
+
+        /**
+         * ============================================================================
+         * LESSON NOTES MODAL HANDLERS
+         * ============================================================================
+         */
+        function openLessonModal(weekKey, rowIdx, colIdx) {
+            const weekData = TIMETABLE_DATA[weekKey];
+            const slot = weekData.rows[rowIdx][colIdx];
+            const dayName = DAYS_OF_WEEK[colIdx];
+            const periodLabel = PERIOD_ROWS[rowIdx].label;
+
+            activeModalSlotKey = `${weekKey}-${rowIdx}-${colIdx}`;
+
+            const modalHeader = document.getElementById("modal-header");
+            modalHeader.className = `modal-header card-${slot.color || "white"}`;
+
+            document.getElementById("modal-meta-text").textContent =
+                `${weekData.label} \u2022 ${dayName} \u2022 ${periodLabel}`;
+            document.getElementById("modal-subject-title").textContent = slot.subject;
+            document.getElementById("modal-subdetails-text").textContent =
+                `${slot.code} \u2022 Room ${slot.room} \u2022 ${slot.teacher}`;
+
+            const textarea = document.getElementById("lesson-note-textarea");
+            textarea.value = lessonNotes[activeModalSlotKey] || "";
+
+            const modal = document.getElementById("lesson-modal");
+            modal.classList.add("open");
+            setTimeout(() => textarea.focus(), 30);
+        }
+
+        function closeLessonModal() {
+            document.getElementById("lesson-modal").classList.remove("open");
+            activeModalSlotKey = null;
+        }
+
+        function handleBackdropClick(event) {
+            if (event.target.id === "lesson-modal") {
+                closeLessonModal();
+            }
+        }
+
+        function saveCurrentLessonNote() {
+            if (!activeModalSlotKey) return;
+            const text = document.getElementById("lesson-note-textarea").value.trim();
+            if (text.length > 0) {
+                lessonNotes[activeModalSlotKey] = text;
+            } else {
+                delete lessonNotes[activeModalSlotKey];
+            }
+            persistLessonNotes();
+            renderTimetable();
+            closeLessonModal();
+            showToast("Lesson note saved");
+        }
+
+        function clearCurrentLessonNote() {
+            if (!activeModalSlotKey) return;
+            document.getElementById("lesson-note-textarea").value = "";
+            delete lessonNotes[activeModalSlotKey];
+            persistLessonNotes();
+            renderTimetable();
+            closeLessonModal();
+            showToast("Lesson note cleared");
+        }
+
+        /**
+         * ============================================================================
+         * COPY STANDALONE HTML CODE
+         * ============================================================================
+         */
+        function copyStandaloneHtml() {
+            const fullSource = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            const tempTextarea = document.createElement("textarea");
+            tempTextarea.value = fullSource;
+            tempTextarea.style.position = "fixed";
+            tempTextarea.style.left = "-9999px";
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+            try {
+                document.execCommand("copy");
+                showToast("Full standalone HTML copied to clipboard!");
+            } catch (e) {
+                showToast("Press Ctrl+C / Cmd+C to copy");
+            }
+            document.body.removeChild(tempTextarea);
+        }
+
+        // Escape key closes modal
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                closeLessonModal();
             }
         });
 
-        // Boot
-        window.addEventListener('DOMContentLoaded', () => {
-            setViewMode('A');
+        // Initialize on page load
+        window.addEventListener("DOMContentLoaded", () => {
+            updateHeaderControls();
+            renderTimetable();
         });
     </script>
 </body>
