@@ -125,6 +125,43 @@
             background-color: #0284c7;
         }
 
+        .sync-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 5px 11px;
+            border-radius: 999px;
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: all 0.16s ease;
+        }
+
+        .sync-pill:hover {
+            background-color: #e2e8f0;
+            color: var(--text-primary);
+        }
+
+        .sync-pill.synced {
+            background-color: #dcfce7;
+            color: #15803d;
+            border-color: #bbf7d0;
+        }
+
+        .sync-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: #94a3b8;
+        }
+
+        .sync-pill.synced .sync-dot {
+            background-color: #16a34a;
+        }
+
         .controls-center {
             display: flex;
             flex-wrap: wrap;
@@ -813,6 +850,11 @@
 
             <!-- Utility Actions -->
             <div class="actions-right">
+                <button type="button" id="cloud-sync-pill" class="sync-pill" onclick="openSyncModal()" title="Sync notes &amp; rotation across devices">
+                    <span class="sync-dot"></span>
+                    <span id="cloud-sync-label">Cloud Sync: Off (Local)</span>
+                </button>
+
                 <button type="button" class="action-btn" onclick="swapRotationCycle()" title="Swap Week A/B cycle if a school holiday shifted the rotation">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="17 1 21 5 17 9"></polyline>
@@ -876,7 +918,7 @@
             <div class="modal-body">
                 <label for="lesson-note-textarea" class="modal-label">
                     <span>Homework &amp; Reminders</span>
-                    <span style="font-weight:500;color:#64748b;font-size:0.72rem;">Saved automatically in browser</span>
+                    <span id="note-storage-hint" style="font-weight:500;color:#64748b;font-size:0.72rem;">Saved locally &amp; synced</span>
                 </label>
                 <textarea id="lesson-note-textarea" class="modal-textarea" placeholder="e.g., Bring PE kit, complete Maths worksheet, revision notes..."></textarea>
             </div>
@@ -886,6 +928,51 @@
                     <button type="button" class="action-btn" onclick="closeLessonModal()">Cancel</button>
                     <button type="button" class="action-btn primary" onclick="saveCurrentLessonNote()">Save Note</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cross-Device Cloud Sync & Transfer Link Modal -->
+    <div id="sync-modal" class="modal-backdrop no-print" onclick="handleSyncBackdropClick(event)">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="sync-modal-title" style="max-width:460px;">
+            <div class="modal-header" style="background:linear-gradient(135deg,#0284c7,#00a6e0);color:#ffffff;">
+                <div>
+                    <div class="modal-meta">Phone &amp; Laptop Sync</div>
+                    <h2 id="sync-modal-title" class="modal-subject">Cross-Device Sync</h2>
+                    <div id="sync-modal-sub" class="modal-subdetails">Keep your notes &amp; Week A/B rotation updated everywhere</div>
+                </div>
+                <button type="button" class="modal-close" onclick="closeSyncModal()" aria-label="Close sync modal">&times;</button>
+            </div>
+            <div class="modal-body" style="gap:14px;">
+                <!-- Option 1: Live Cloud Account Sync -->
+                <div style="padding:12px;border-radius:12px;border:1px solid var(--border-light);background:var(--surface-subtle);display:flex;flex-direction:column;gap:8px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                        <strong style="font-size:0.82rem;color:var(--text-primary);">1. Real-Time Cloud Sync</strong>
+                        <span id="sync-account-badge" style="font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:999px;background:#e2e8f0;color:#475569;">Offline / Local</span>
+                    </div>
+                    <p id="sync-account-desc" style="font-size:0.76rem;color:var(--text-secondary);">Sign in with Google on both your laptop and phone to automatically sync notes in real time.</p>
+                    <div id="sync-auth-buttons" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:2px;">
+                        <button type="button" id="btn-google-signin" class="action-btn primary" onclick="triggerGoogleSignIn()">Sign in with Google</button>
+                        <button type="button" id="btn-google-signout" class="action-btn" onclick="triggerSignOut()" style="display:none;color:#dc2626;">Sign Out</button>
+                    </div>
+                </div>
+
+                <!-- Option 2: Instant Transfer Link / Sync Code -->
+                <div style="padding:12px;border-radius:12px;border:1px solid var(--border-light);background:#ffffff;display:flex;flex-direction:column;gap:8px;">
+                    <strong style="font-size:0.82rem;color:var(--text-primary);">2. Instant Transfer Link / Backup Code</strong>
+                    <p style="font-size:0.76rem;color:var(--text-secondary);">Copy a smart link or code containing all your current notes to open directly on your phone.</p>
+                    <div style="display:flex;gap:8px;">
+                        <input type="text" id="sync-transfer-output" readonly style="flex:1;padding:7px 10px;border-radius:8px;border:1px solid var(--border-mid);font-size:0.75rem;background:var(--surface-subtle);color:var(--text-primary);" />
+                        <button type="button" class="action-btn primary" onclick="copyTransferLink()">Copy Link</button>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:2px;">
+                        <input type="text" id="sync-import-input" placeholder="Paste backup code or link from another device..." style="flex:1;padding:7px 10px;border-radius:8px;border:1px solid var(--border-mid);font-size:0.75rem;color:var(--text-primary);" />
+                        <button type="button" class="action-btn" onclick="importTransferCode()">Load</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content:flex-end;">
+                <button type="button" class="action-btn primary" onclick="closeSyncModal()">Done</button>
             </div>
         </div>
     </div>
@@ -1013,6 +1100,14 @@
             }
         }
 
+        function setRotationSwappedLocal(val) {
+            try {
+                localStorage.setItem(STORAGE_SWAP_KEY, String(Boolean(val)));
+            } catch (e) {
+                console.warn("Unable to write rotation swap to localStorage:", e);
+            }
+        }
+
         function getActiveRotatedWeek() {
             const anchorMondayNov16_2026UTC = Date.UTC(2026, 10, 16); // Month is 0-indexed (10 = November)
             const currentMondayUTC = getMondayUTC(new Date());
@@ -1117,16 +1212,15 @@
         }
 
         function swapRotationCycle() {
-            try {
-                const nextState = !isRotationSwapped();
-                localStorage.setItem(STORAGE_SWAP_KEY, String(nextState));
-            } catch (e) {
-                console.warn("Unable to toggle rotation swap:", e);
-            }
+            const nextState = !isRotationSwapped();
+            setRotationSwappedLocal(nextState);
             currentRotatedWeek = getActiveRotatedWeek();
             viewMode = currentRotatedWeek;
             updateHeaderControls();
             renderTimetable();
+            if (typeof window.pushTimetableStateToCloud === "function") {
+                window.pushTimetableStateToCloud();
+            }
             showToast(`Rotation calibrated: This week is now Week ${currentRotatedWeek}`);
         }
 
@@ -1269,6 +1363,9 @@
                 delete lessonNotes[activeModalSlotKey];
             }
             persistLessonNotes();
+            if (typeof window.pushTimetableStateToCloud === "function") {
+                window.pushTimetableStateToCloud();
+            }
             renderTimetable();
             closeLessonModal();
             showToast("Lesson note saved");
@@ -1279,9 +1376,150 @@
             document.getElementById("lesson-note-textarea").value = "";
             delete lessonNotes[activeModalSlotKey];
             persistLessonNotes();
+            if (typeof window.pushTimetableStateToCloud === "function") {
+                window.pushTimetableStateToCloud();
+            }
             renderTimetable();
             closeLessonModal();
             showToast("Lesson note cleared");
+        }
+
+        /**
+         * ============================================================================
+         * CROSS-DEVICE TRANSFER LINK / BACKUP CODE & MODAL CONTROLS
+         * ============================================================================
+         */
+        function encodeSyncPayload() {
+            const payload = {
+                n: lessonNotes,
+                s: isRotationSwapped() ? 1 : 0
+            };
+            const jsonStr = JSON.stringify(payload);
+            const bytes = new TextEncoder().encode(jsonStr);
+            let binary = "";
+            for (let i = 0; i < bytes.length; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+        }
+
+        function decodeSyncPayload(rawInput) {
+            let token = String(rawInput || "").trim();
+            if (!token) return null;
+            if (token.includes("#sync=")) {
+                token = token.split("#sync=")[1].split("&")[0];
+            }
+            token = token.replace(/-/g, "+").replace(/_/g, "/");
+            while (token.length % 4 !== 0) {
+                token += "=";
+            }
+            const binary = atob(token);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            const jsonStr = new TextDecoder().decode(bytes);
+            const parsed = JSON.parse(jsonStr);
+            if (!parsed || typeof parsed !== "object") return null;
+            return {
+                notes: (parsed.n && typeof parsed.n === "object") ? parsed.n : {},
+                swapped: Boolean(parsed.s)
+            };
+        }
+
+        function buildTransferUrl() {
+            const baseUrl = window.location.href.split("#")[0];
+            return `${baseUrl}#sync=${encodeSyncPayload()}`;
+        }
+
+        function applyHashSyncIfPresent() {
+            const hash = window.location.hash || "";
+            if (!hash.startsWith("#sync=")) return;
+            try {
+                const decoded = decodeSyncPayload(hash);
+                if (decoded) {
+                    lessonNotes = Object.assign({}, lessonNotes, decoded.notes);
+                    persistLessonNotes();
+                    setRotationSwappedLocal(decoded.swapped);
+                    currentRotatedWeek = getActiveRotatedWeek();
+                    viewMode = currentRotatedWeek;
+                    if (history.replaceState) {
+                        history.replaceState(null, "", window.location.pathname + window.location.search);
+                    }
+                    setTimeout(() => showToast("Imported timetable notes from link!"), 300);
+                }
+            } catch (e) {
+                console.warn("Invalid sync link hash:", e);
+            }
+        }
+
+        function openSyncModal() {
+            document.getElementById("sync-transfer-output").value = buildTransferUrl();
+            document.getElementById("sync-import-input").value = "";
+            document.getElementById("sync-modal").classList.add("open");
+        }
+
+        function closeSyncModal() {
+            document.getElementById("sync-modal").classList.remove("open");
+        }
+
+        function handleSyncBackdropClick(event) {
+            if (event.target.id === "sync-modal") {
+                closeSyncModal();
+            }
+        }
+
+        function copyTransferLink() {
+            const inputEl = document.getElementById("sync-transfer-output");
+            inputEl.value = buildTransferUrl();
+            inputEl.select();
+            inputEl.setSelectionRange(0, 99999);
+            try {
+                document.execCommand("copy");
+                showToast("Transfer link copied! Open it on your phone.");
+            } catch (e) {
+                showToast("Select and copy the link above");
+            }
+        }
+
+        function importTransferCode() {
+            const raw = document.getElementById("sync-import-input").value;
+            try {
+                const decoded = decodeSyncPayload(raw);
+                if (!decoded) {
+                    showToast("Invalid backup code or link");
+                    return;
+                }
+                lessonNotes = Object.assign({}, lessonNotes, decoded.notes);
+                persistLessonNotes();
+                setRotationSwappedLocal(decoded.swapped);
+                currentRotatedWeek = getActiveRotatedWeek();
+                viewMode = currentRotatedWeek;
+                updateHeaderControls();
+                renderTimetable();
+                if (typeof window.pushTimetableStateToCloud === "function") {
+                    window.pushTimetableStateToCloud();
+                }
+                document.getElementById("sync-transfer-output").value = buildTransferUrl();
+                document.getElementById("sync-import-input").value = "";
+                showToast("Notes & rotation synced from code!");
+            } catch (e) {
+                showToast("Could not read backup code");
+            }
+        }
+
+        function triggerGoogleSignIn() {
+            if (typeof window.firebaseGoogleSignIn === "function") {
+                window.firebaseGoogleSignIn();
+            } else {
+                showToast("Cloud sign-in unavailable offline — use Transfer Link below!");
+            }
+        }
+
+        function triggerSignOut() {
+            if (typeof window.firebaseGoogleSignOut === "function") {
+                window.firebaseGoogleSignOut();
+            }
         }
 
         /**
@@ -1306,18 +1544,209 @@
             document.body.removeChild(tempTextarea);
         }
 
-        // Escape key closes modal
+        // Escape key closes modals
         document.addEventListener("keydown", (e) => {
             if (e.key === "Escape") {
                 closeLessonModal();
+                closeSyncModal();
             }
         });
 
         // Initialize on page load
         window.addEventListener("DOMContentLoaded", () => {
+            applyHashSyncIfPresent();
             updateHeaderControls();
             renderTimetable();
         });
+    </script>
+
+    <!-- Firebase Realtime Cloud Sync Module (Auth + Firestore) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import {
+            getAuth,
+            GoogleAuthProvider,
+            signInWithPopup,
+            signInWithRedirect,
+            signInWithCustomToken,
+            signInAnonymously,
+            signOut,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import {
+            getFirestore,
+            doc,
+            setDoc,
+            onSnapshot
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== "undefined" ? __app_id : "class-10c-timetable";
+        let firebaseConfig = null;
+        try {
+            if (typeof __firebase_config !== "undefined" && __firebase_config) {
+                firebaseConfig = typeof __firebase_config === "string"
+                    ? JSON.parse(__firebase_config)
+                    : __firebase_config;
+            }
+        } catch (err) {
+            console.warn("Firebase config unavailable, running in local + transfer link mode.");
+        }
+
+        function updateSyncStatusUI(state, detailText) {
+            const pill = document.getElementById("cloud-sync-pill");
+            const label = document.getElementById("cloud-sync-label");
+            const badge = document.getElementById("sync-account-badge");
+            const desc = document.getElementById("sync-account-desc");
+            const signInBtn = document.getElementById("btn-google-signin");
+            const signOutBtn = document.getElementById("btn-google-signout");
+
+            if (!pill || !label) return;
+
+            if (state === "synced") {
+                pill.classList.add("synced");
+                label.textContent = "Synced";
+                if (badge) {
+                    badge.textContent = "Cloud Synced";
+                    badge.style.background = "#dcfce7";
+                    badge.style.color = "#15803d";
+                }
+                if (desc && detailText) desc.textContent = detailText;
+                if (signInBtn) signInBtn.style.display = "none";
+                if (signOutBtn) signOutBtn.style.display = "inline-flex";
+            } else {
+                pill.classList.remove("synced");
+                label.textContent = "Cloud Sync: Off (Local)";
+                if (badge) {
+                    badge.textContent = "Local Cache";
+                    badge.style.background = "#e2e8f0";
+                    badge.style.color = "#475569";
+                }
+                if (desc && detailText) desc.textContent = detailText;
+                if (signInBtn) signInBtn.style.display = "inline-flex";
+                if (signOutBtn) signOutBtn.style.display = "none";
+            }
+        }
+
+        if (firebaseConfig && firebaseConfig.apiKey) {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            let activeUser = null;
+            let unsubscribeDoc = null;
+            let hasInitialRemoteHydrated = false;
+
+            function getUserTimetableDocRef(uid) {
+                return doc(db, "artifacts", appId, "users", uid, "timetable", "data");
+            }
+
+            window.pushTimetableStateToCloud = async function () {
+                if (!activeUser) return;
+                try {
+                    await setDoc(getUserTimetableDocRef(activeUser.uid), {
+                        notes: lessonNotes,
+                        swapped: isRotationSwapped(),
+                        updatedAt: Date.now()
+                    }, { merge: true });
+                } catch (err) {
+                    console.warn("Cloud write failed (cached locally):", err);
+                }
+            };
+
+            window.firebaseGoogleSignIn = async function () {
+                const provider = new GoogleAuthProvider();
+                try {
+                    await signInWithPopup(auth, provider);
+                    showToast("Signed in! Syncing timetable across devices...");
+                } catch (err) {
+                    if (err && (err.code === "auth/popup-blocked" || err.code === "auth/operation-not-supported-in-this-environment")) {
+                        try {
+                            await signInWithRedirect(auth, provider);
+                        } catch (redirErr) {
+                            showToast("Sign-in blocked in preview — use Transfer Link below!");
+                        }
+                    } else {
+                        showToast("Could not sign in — use Transfer Link below!");
+                    }
+                }
+            };
+
+            window.firebaseGoogleSignOut = async function () {
+                try {
+                    await signOut(auth);
+                    showToast("Signed out of Cloud Sync");
+                } catch (err) {
+                    console.warn("Sign out error:", err);
+                }
+            };
+
+            onAuthStateChanged(auth, (user) => {
+                if (unsubscribeDoc) {
+                    unsubscribeDoc();
+                    unsubscribeDoc = null;
+                }
+                activeUser = user;
+                hasInitialRemoteHydrated = false;
+
+                if (!user) {
+                    updateSyncStatusUI("local", "Sign in with Google on both your laptop and phone to automatically sync notes in real time.");
+                    return;
+                }
+
+                const accountLabel = user.email
+                    ? `Signed in as ${user.email}. All notes & A/B rotation changes sync live.`
+                    : `Connected to Cloud Sync (Device ID: ${user.uid}).`;
+                updateSyncStatusUI("synced", accountLabel);
+
+                const docRef = getUserTimetableDocRef(user.uid);
+                unsubscribeDoc = onSnapshot(docRef, (snap) => {
+                    if (snap.exists()) {
+                        const data = snap.data();
+                        const remoteNotes = (data && data.notes && typeof data.notes === "object") ? data.notes : {};
+                        if (!hasInitialRemoteHydrated) {
+                            // Merge any offline local notes with remote notes on first connect
+                            lessonNotes = Object.assign({}, remoteNotes, lessonNotes);
+                            hasInitialRemoteHydrated = true;
+                            persistLessonNotes();
+                            if (Object.keys(lessonNotes).length > Object.keys(remoteNotes).length) {
+                                window.pushTimetableStateToCloud();
+                            }
+                        } else {
+                            lessonNotes = remoteNotes;
+                            persistLessonNotes();
+                        }
+
+                        if (typeof data.swapped === "boolean" && data.swapped !== isRotationSwapped()) {
+                            setRotationSwappedLocal(data.swapped);
+                            currentRotatedWeek = getActiveRotatedWeek();
+                            viewMode = currentRotatedWeek;
+                        }
+
+                        updateHeaderControls();
+                        renderTimetable();
+                    } else {
+                        hasInitialRemoteHydrated = true;
+                        if (Object.keys(lessonNotes).length > 0 || isRotationSwapped()) {
+                            window.pushTimetableStateToCloud();
+                        }
+                    }
+                }, (error) => {
+                    console.warn("Firestore sync listener error:", error);
+                });
+            });
+
+            // Automatically authenticate environment session if token is provided
+            (async () => {
+                try {
+                    if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else if (!auth.currentUser) {
+                        await signInAnonymously(auth);
+                    }
+                } catch (authErr) {
+                    console.warn("Initial background auth skipped:", authErr);
+                }
+            })();
+        }
     </script>
 </body>
 </html>
