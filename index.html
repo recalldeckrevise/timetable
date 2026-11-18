@@ -850,9 +850,9 @@
 
             <!-- Utility Actions -->
             <div class="actions-right">
-                <button type="button" id="cloud-sync-pill" class="sync-pill" onclick="openSyncModal()" title="Sync notes &amp; rotation across devices">
+                <button type="button" id="cloud-sync-pill" class="sync-pill" onclick="openAccountModal()" title="Sign in to sync notes &amp; rotation across devices">
                     <span class="sync-dot"></span>
-                    <span id="cloud-sync-label">Cloud Sync: Off (Local)</span>
+                    <span id="cloud-sync-label">Sign In to Sync</span>
                 </button>
 
                 <button type="button" class="action-btn" onclick="swapRotationCycle()" title="Swap Week A/B cycle if a school holiday shifted the rotation">
@@ -918,7 +918,7 @@
             <div class="modal-body">
                 <label for="lesson-note-textarea" class="modal-label">
                     <span>Homework &amp; Reminders</span>
-                    <span id="note-storage-hint" style="font-weight:500;color:#64748b;font-size:0.72rem;">Saved locally &amp; synced</span>
+                    <span id="note-storage-hint" style="font-weight:500;color:#64748b;font-size:0.72rem;">Saved on this device</span>
                 </label>
                 <textarea id="lesson-note-textarea" class="modal-textarea" placeholder="e.g., Bring PE kit, complete Maths worksheet, revision notes..."></textarea>
             </div>
@@ -932,47 +932,84 @@
         </div>
     </div>
 
-    <!-- Cross-Device Cloud Sync & Transfer Link Modal -->
-    <div id="sync-modal" class="modal-backdrop no-print" onclick="handleSyncBackdropClick(event)">
-        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="sync-modal-title" style="max-width:460px;">
+    <!-- Real-Time Account Sign-In & Cloud Sync Modal -->
+    <div id="account-modal" class="modal-backdrop no-print" onclick="handleAccountBackdropClick(event)">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="account-modal-title" style="max-width:430px;">
             <div class="modal-header" style="background:linear-gradient(135deg,#0284c7,#00a6e0);color:#ffffff;">
                 <div>
-                    <div class="modal-meta">Phone &amp; Laptop Sync</div>
-                    <h2 id="sync-modal-title" class="modal-subject">Cross-Device Sync</h2>
-                    <div id="sync-modal-sub" class="modal-subdetails">Keep your notes &amp; Week A/B rotation updated everywhere</div>
+                    <div class="modal-meta">Cross-Device Cloud Sync</div>
+                    <h2 id="account-modal-title" class="modal-subject">Your Timetable Account</h2>
+                    <div id="account-modal-sub" class="modal-subdetails">Sign in on PC and phone to sync notes automatically</div>
                 </div>
-                <button type="button" class="modal-close" onclick="closeSyncModal()" aria-label="Close sync modal">&times;</button>
+                <button type="button" class="modal-close" onclick="closeAccountModal()" aria-label="Close account modal">&times;</button>
             </div>
+
             <div class="modal-body" style="gap:14px;">
-                <!-- Option 1: Live Cloud Account Sync -->
-                <div style="padding:12px;border-radius:12px;border:1px solid var(--border-light);background:var(--surface-subtle);display:flex;flex-direction:column;gap:8px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                        <strong style="font-size:0.82rem;color:var(--text-primary);">1. Real-Time Cloud Sync</strong>
-                        <span id="sync-account-badge" style="font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:999px;background:#e2e8f0;color:#475569;">Offline / Local</span>
+                <!-- Signed-In Account View -->
+                <div id="account-signed-in-panel" style="display:none;flex-direction:column;gap:12px;">
+                    <div style="padding:12px 14px;border-radius:12px;border:1px solid #bbf7d0;background:#f0fdf4;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                        <div>
+                            <div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:#15803d;">Live Cloud Sync Active</div>
+                            <div id="signed-in-user-email" style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-top:2px;">student@example.com</div>
+                        </div>
+                        <span style="width:10px;height:10px;border-radius:50%;background:#16a34a;box-shadow:0 0 0 4px rgba(22,163,74,0.18);"></span>
                     </div>
-                    <p id="sync-account-desc" style="font-size:0.76rem;color:var(--text-secondary);">Sign in with Google on both your laptop and phone to automatically sync notes in real time.</p>
-                    <div id="sync-auth-buttons" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:2px;">
-                        <button type="button" id="btn-google-signin" class="action-btn primary" onclick="triggerGoogleSignIn()">Sign in with Google</button>
-                        <button type="button" id="btn-google-signout" class="action-btn" onclick="triggerSignOut()" style="display:none;color:#dc2626;">Sign Out</button>
-                    </div>
+                    <p style="font-size:0.78rem;color:var(--text-secondary);">
+                        Any homework note you add, edit, or clear updates automatically across all devices signed into this account.
+                    </p>
+                    <button type="button" class="action-btn" onclick="triggerSignOut()" style="justify-content:center;color:#dc2626;border-color:#fecaca;background:#fef2f2;">
+                        Sign Out
+                    </button>
                 </div>
 
-                <!-- Option 2: Instant Transfer Link / Sync Code -->
-                <div style="padding:12px;border-radius:12px;border:1px solid var(--border-light);background:#ffffff;display:flex;flex-direction:column;gap:8px;">
-                    <strong style="font-size:0.82rem;color:var(--text-primary);">2. Instant Transfer Link / Backup Code</strong>
-                    <p style="font-size:0.76rem;color:var(--text-secondary);">Copy a smart link or code containing all your current notes to open directly on your phone.</p>
-                    <div style="display:flex;gap:8px;">
-                        <input type="text" id="sync-transfer-output" readonly style="flex:1;padding:7px 10px;border-radius:8px;border:1px solid var(--border-mid);font-size:0.75rem;background:var(--surface-subtle);color:var(--text-primary);" />
-                        <button type="button" class="action-btn primary" onclick="copyTransferLink()">Copy Link</button>
+                <!-- Signed-Out Auth Form View -->
+                <div id="account-signed-out-panel" style="display:flex;flex-direction:column;gap:12px;">
+                    <button type="button" onclick="triggerGoogleSignIn()" class="action-btn" style="justify-content:center;padding:10px 14px;font-weight:700;border-color:#cbd5e1;background:#ffffff;box-shadow:0 1px 2px rgba(15,23,42,0.05);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
+                            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"/>
+                            <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"/>
+                            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"/>
+                        </svg>
+                        <span>Continue with Google</span>
+                    </button>
+
+                    <div style="display:flex;align-items:center;gap:10px;color:var(--text-muted);font-size:0.72rem;font-weight:700;text-transform:uppercase;">
+                        <span style="flex:1;height:1px;background:var(--border-light);"></span>
+                        <span>or use email &amp; password</span>
+                        <span style="flex:1;height:1px;background:var(--border-light);"></span>
                     </div>
-                    <div style="display:flex;gap:8px;margin-top:2px;">
-                        <input type="text" id="sync-import-input" placeholder="Paste backup code or link from another device..." style="flex:1;padding:7px 10px;border-radius:8px;border:1px solid var(--border-mid);font-size:0.75rem;color:var(--text-primary);" />
-                        <button type="button" class="action-btn" onclick="importTransferCode()">Load</button>
+
+                    <!-- Sign In / Create Account Mode Switcher -->
+                    <div class="segmented-control" style="width:100%;display:grid;grid-template-columns:1fr 1fr;">
+                        <button type="button" id="auth-tab-signin" class="seg-btn active" onclick="setAuthTab('signin')">Sign In</button>
+                        <button type="button" id="auth-tab-signup" class="seg-btn" onclick="setAuthTab('signup')">Create Account</button>
                     </div>
+
+                    <form id="email-auth-form" onsubmit="handleEmailAuthSubmit(event)" style="display:flex;flex-direction:column;gap:10px;">
+                        <div style="display:flex;flex-direction:column;gap:4px;">
+                            <label for="auth-email-input" style="font-size:0.74rem;font-weight:700;color:var(--text-primary);">Email</label>
+                            <input type="email" id="auth-email-input" required placeholder="you@example.com" autocomplete="email"
+                                style="padding:9px 11px;border-radius:10px;border:1px solid var(--border-mid);font-size:0.84rem;color:var(--text-primary);outline:none;" />
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:4px;">
+                            <label for="auth-password-input" style="font-size:0.74rem;font-weight:700;color:var(--text-primary);">Password</label>
+                            <input type="password" id="auth-password-input" required minlength="6" placeholder="At least 6 characters" autocomplete="current-password"
+                                style="padding:9px 11px;border-radius:10px;border:1px solid var(--border-mid);font-size:0.84rem;color:var(--text-primary);outline:none;" />
+                        </div>
+
+                        <div id="auth-inline-message" style="display:none;font-size:0.76rem;font-weight:600;padding:8px 10px;border-radius:8px;"></div>
+
+                        <button type="submit" id="auth-submit-btn" class="action-btn primary" style="justify-content:center;padding:10px 14px;font-weight:700;margin-top:2px;">
+                            Sign In
+                        </button>
+                    </form>
                 </div>
             </div>
-            <div class="modal-footer" style="justify-content:flex-end;">
-                <button type="button" class="action-btn primary" onclick="closeSyncModal()">Done</button>
+
+            <div class="modal-footer" style="justify-content:space-between;">
+                <span style="font-size:0.72rem;color:var(--text-muted);">Local backup is always active</span>
+                <button type="button" class="action-btn" onclick="closeAccountModal()">Close</button>
             </div>
         </div>
     </div>
@@ -1356,163 +1393,125 @@
 
         function saveCurrentLessonNote() {
             if (!activeModalSlotKey) return;
+            const slotKey = activeModalSlotKey;
             const text = document.getElementById("lesson-note-textarea").value.trim();
+
             if (text.length > 0) {
-                lessonNotes[activeModalSlotKey] = text;
+                lessonNotes[slotKey] = text;
+                persistLessonNotes();
+                renderTimetable();
+                closeLessonModal();
+                if (typeof window.syncLessonNoteChangeToCloud === "function") {
+                    window.syncLessonNoteChangeToCloud(slotKey, text);
+                }
+                showToast("Lesson note saved");
             } else {
-                delete lessonNotes[activeModalSlotKey];
+                // Treat saving an empty textarea identically to clearing the note
+                clearCurrentLessonNote();
             }
-            persistLessonNotes();
-            if (typeof window.pushTimetableStateToCloud === "function") {
-                window.pushTimetableStateToCloud();
-            }
-            renderTimetable();
-            closeLessonModal();
-            showToast("Lesson note saved");
         }
 
         function clearCurrentLessonNote() {
             if (!activeModalSlotKey) return;
+            const slotKey = activeModalSlotKey;
             document.getElementById("lesson-note-textarea").value = "";
-            delete lessonNotes[activeModalSlotKey];
+            delete lessonNotes[slotKey];
             persistLessonNotes();
-            if (typeof window.pushTimetableStateToCloud === "function") {
-                window.pushTimetableStateToCloud();
-            }
             renderTimetable();
             closeLessonModal();
+            if (typeof window.syncLessonNoteChangeToCloud === "function") {
+                window.syncLessonNoteChangeToCloud(slotKey, null);
+            }
             showToast("Lesson note cleared");
         }
 
         /**
          * ============================================================================
-         * CROSS-DEVICE TRANSFER LINK / BACKUP CODE & MODAL CONTROLS
+         * ACCOUNT SIGN-IN MODAL & AUTH TAB CONTROLS
          * ============================================================================
          */
-        function encodeSyncPayload() {
-            const payload = {
-                n: lessonNotes,
-                s: isRotationSwapped() ? 1 : 0
-            };
-            const jsonStr = JSON.stringify(payload);
-            const bytes = new TextEncoder().encode(jsonStr);
-            let binary = "";
-            for (let i = 0; i < bytes.length; i++) {
-                binary += String.fromCharCode(bytes[i]);
-            }
-            return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-        }
+        let currentAuthTab = "signin";
 
-        function decodeSyncPayload(rawInput) {
-            let token = String(rawInput || "").trim();
-            if (!token) return null;
-            if (token.includes("#sync=")) {
-                token = token.split("#sync=")[1].split("&")[0];
-            }
-            token = token.replace(/-/g, "+").replace(/_/g, "/");
-            while (token.length % 4 !== 0) {
-                token += "=";
-            }
-            const binary = atob(token);
-            const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) {
-                bytes[i] = binary.charCodeAt(i);
-            }
-            const jsonStr = new TextDecoder().decode(bytes);
-            const parsed = JSON.parse(jsonStr);
-            if (!parsed || typeof parsed !== "object") return null;
-            return {
-                notes: (parsed.n && typeof parsed.n === "object") ? parsed.n : {},
-                swapped: Boolean(parsed.s)
-            };
-        }
+        function setAuthTab(tab) {
+            currentAuthTab = tab;
+            const signInTab = document.getElementById("auth-tab-signin");
+            const signUpTab = document.getElementById("auth-tab-signup");
+            const submitBtn = document.getElementById("auth-submit-btn");
+            const pwdInput = document.getElementById("auth-password-input");
 
-        function buildTransferUrl() {
-            const baseUrl = window.location.href.split("#")[0];
-            return `${baseUrl}#sync=${encodeSyncPayload()}`;
-        }
+            clearAuthInlineMessage();
 
-        function applyHashSyncIfPresent() {
-            const hash = window.location.hash || "";
-            if (!hash.startsWith("#sync=")) return;
-            try {
-                const decoded = decodeSyncPayload(hash);
-                if (decoded) {
-                    lessonNotes = Object.assign({}, lessonNotes, decoded.notes);
-                    persistLessonNotes();
-                    setRotationSwappedLocal(decoded.swapped);
-                    currentRotatedWeek = getActiveRotatedWeek();
-                    viewMode = currentRotatedWeek;
-                    if (history.replaceState) {
-                        history.replaceState(null, "", window.location.pathname + window.location.search);
-                    }
-                    setTimeout(() => showToast("Imported timetable notes from link!"), 300);
-                }
-            } catch (e) {
-                console.warn("Invalid sync link hash:", e);
+            if (tab === "signup") {
+                signInTab.classList.remove("active");
+                signUpTab.classList.add("active");
+                submitBtn.textContent = "Create Account";
+                pwdInput.setAttribute("autocomplete", "new-password");
+            } else {
+                signUpTab.classList.remove("active");
+                signInTab.classList.add("active");
+                submitBtn.textContent = "Sign In";
+                pwdInput.setAttribute("autocomplete", "current-password");
             }
         }
 
-        function openSyncModal() {
-            document.getElementById("sync-transfer-output").value = buildTransferUrl();
-            document.getElementById("sync-import-input").value = "";
-            document.getElementById("sync-modal").classList.add("open");
-        }
-
-        function closeSyncModal() {
-            document.getElementById("sync-modal").classList.remove("open");
-        }
-
-        function handleSyncBackdropClick(event) {
-            if (event.target.id === "sync-modal") {
-                closeSyncModal();
+        function showAuthInlineMessage(text, isError) {
+            const msgEl = document.getElementById("auth-inline-message");
+            if (!msgEl) return;
+            msgEl.textContent = text;
+            msgEl.style.display = "block";
+            if (isError) {
+                msgEl.style.background = "#fef2f2";
+                msgEl.style.color = "#b91c1c";
+                msgEl.style.border = "1px solid #fecaca";
+            } else {
+                msgEl.style.background = "#f0fdf4";
+                msgEl.style.color = "#15803d";
+                msgEl.style.border = "1px solid #bbf7d0";
             }
         }
 
-        function copyTransferLink() {
-            const inputEl = document.getElementById("sync-transfer-output");
-            inputEl.value = buildTransferUrl();
-            inputEl.select();
-            inputEl.setSelectionRange(0, 99999);
-            try {
-                document.execCommand("copy");
-                showToast("Transfer link copied! Open it on your phone.");
-            } catch (e) {
-                showToast("Select and copy the link above");
+        function clearAuthInlineMessage() {
+            const msgEl = document.getElementById("auth-inline-message");
+            if (msgEl) {
+                msgEl.style.display = "none";
+                msgEl.textContent = "";
             }
         }
 
-        function importTransferCode() {
-            const raw = document.getElementById("sync-import-input").value;
-            try {
-                const decoded = decodeSyncPayload(raw);
-                if (!decoded) {
-                    showToast("Invalid backup code or link");
-                    return;
-                }
-                lessonNotes = Object.assign({}, lessonNotes, decoded.notes);
-                persistLessonNotes();
-                setRotationSwappedLocal(decoded.swapped);
-                currentRotatedWeek = getActiveRotatedWeek();
-                viewMode = currentRotatedWeek;
-                updateHeaderControls();
-                renderTimetable();
-                if (typeof window.pushTimetableStateToCloud === "function") {
-                    window.pushTimetableStateToCloud();
-                }
-                document.getElementById("sync-transfer-output").value = buildTransferUrl();
-                document.getElementById("sync-import-input").value = "";
-                showToast("Notes & rotation synced from code!");
-            } catch (e) {
-                showToast("Could not read backup code");
+        function openAccountModal() {
+            clearAuthInlineMessage();
+            document.getElementById("account-modal").classList.add("open");
+        }
+
+        function closeAccountModal() {
+            document.getElementById("account-modal").classList.remove("open");
+        }
+
+        function handleAccountBackdropClick(event) {
+            if (event.target.id === "account-modal") {
+                closeAccountModal();
+            }
+        }
+
+        function handleEmailAuthSubmit(event) {
+            event.preventDefault();
+            const email = document.getElementById("auth-email-input").value.trim();
+            const password = document.getElementById("auth-password-input").value;
+            if (!email || !password) return;
+
+            if (typeof window.firebaseEmailAuth === "function") {
+                window.firebaseEmailAuth(currentAuthTab, email, password);
+            } else {
+                showAuthInlineMessage("Cloud authentication is unavailable in offline mode.", true);
             }
         }
 
         function triggerGoogleSignIn() {
+            clearAuthInlineMessage();
             if (typeof window.firebaseGoogleSignIn === "function") {
                 window.firebaseGoogleSignIn();
             } else {
-                showToast("Cloud sign-in unavailable offline — use Transfer Link below!");
+                showAuthInlineMessage("Cloud authentication is unavailable in offline mode.", true);
             }
         }
 
@@ -1548,13 +1547,12 @@
         document.addEventListener("keydown", (e) => {
             if (e.key === "Escape") {
                 closeLessonModal();
-                closeSyncModal();
+                closeAccountModal();
             }
         });
 
         // Initialize on page load
         window.addEventListener("DOMContentLoaded", () => {
-            applyHashSyncIfPresent();
             updateHeaderControls();
             renderTimetable();
         });
@@ -1568,8 +1566,9 @@
             GoogleAuthProvider,
             signInWithPopup,
             signInWithRedirect,
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
             signInWithCustomToken,
-            signInAnonymously,
             signOut,
             onAuthStateChanged
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -1577,6 +1576,9 @@
             getFirestore,
             doc,
             setDoc,
+            updateDoc,
+            deleteField,
+            serverTimestamp,
             onSnapshot
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
@@ -1589,41 +1591,57 @@
                     : __firebase_config;
             }
         } catch (err) {
-            console.warn("Firebase config unavailable, running in local + transfer link mode.");
+            console.warn("Firebase config unavailable, running in local device mode.");
         }
 
-        function updateSyncStatusUI(state, detailText) {
+        function formatFirebaseAuthError(err) {
+            const code = (err && err.code) ? err.code : "";
+            switch (code) {
+                case "auth/invalid-email":
+                    return "Please enter a valid email address.";
+                case "auth/user-not-found":
+                case "auth/wrong-password":
+                case "auth/invalid-credential":
+                    return "Incorrect email or password.";
+                case "auth/email-already-in-use":
+                    return "An account with this email already exists. Switch to Sign In.";
+                case "auth/weak-password":
+                    return "Password must be at least 6 characters.";
+                case "auth/too-many-requests":
+                    return "Too many attempts. Please wait a moment and try again.";
+                case "auth/popup-closed-by-user":
+                    return "Google sign-in popup was closed before finishing.";
+                case "auth/popup-blocked":
+                    return "Popup blocked by browser. Use Email & Password below!";
+                default:
+                    return (err && err.message) ? err.message : "Authentication failed. Please try again.";
+            }
+        }
+
+        function updateAccountUI(user) {
             const pill = document.getElementById("cloud-sync-pill");
             const label = document.getElementById("cloud-sync-label");
-            const badge = document.getElementById("sync-account-badge");
-            const desc = document.getElementById("sync-account-desc");
-            const signInBtn = document.getElementById("btn-google-signin");
-            const signOutBtn = document.getElementById("btn-google-signout");
+            const noteHint = document.getElementById("note-storage-hint");
+            const signedInPanel = document.getElementById("account-signed-in-panel");
+            const signedOutPanel = document.getElementById("account-signed-out-panel");
+            const userEmailDisplay = document.getElementById("signed-in-user-email");
 
             if (!pill || !label) return;
 
-            if (state === "synced") {
+            if (user && !user.isAnonymous) {
+                const displayName = user.email || user.displayName || "Signed-In Account";
                 pill.classList.add("synced");
-                label.textContent = "Synced";
-                if (badge) {
-                    badge.textContent = "Cloud Synced";
-                    badge.style.background = "#dcfce7";
-                    badge.style.color = "#15803d";
-                }
-                if (desc && detailText) desc.textContent = detailText;
-                if (signInBtn) signInBtn.style.display = "none";
-                if (signOutBtn) signOutBtn.style.display = "inline-flex";
+                label.textContent = `${displayName} \u2022 Synced`;
+                if (noteHint) noteHint.textContent = "Synced to cloud automatically";
+                if (signedInPanel) signedInPanel.style.display = "flex";
+                if (signedOutPanel) signedOutPanel.style.display = "none";
+                if (userEmailDisplay) userEmailDisplay.textContent = displayName;
             } else {
                 pill.classList.remove("synced");
-                label.textContent = "Cloud Sync: Off (Local)";
-                if (badge) {
-                    badge.textContent = "Local Cache";
-                    badge.style.background = "#e2e8f0";
-                    badge.style.color = "#475569";
-                }
-                if (desc && detailText) desc.textContent = detailText;
-                if (signInBtn) signInBtn.style.display = "inline-flex";
-                if (signOutBtn) signOutBtn.style.display = "none";
+                label.textContent = "Sign In to Sync";
+                if (noteHint) noteHint.textContent = "Saved locally on this device";
+                if (signedInPanel) signedInPanel.style.display = "none";
+                if (signedOutPanel) signedOutPanel.style.display = "flex";
             }
         }
 
@@ -1639,16 +1657,73 @@
                 return doc(db, "artifacts", appId, "users", uid, "timetable", "data");
             }
 
+            // Full state sync (used for initial migration & Swap A/B toggle)
             window.pushTimetableStateToCloud = async function () {
-                if (!activeUser) return;
+                if (!activeUser || activeUser.isAnonymous) return;
                 try {
                     await setDoc(getUserTimetableDocRef(activeUser.uid), {
                         notes: lessonNotes,
-                        swapped: isRotationSwapped(),
-                        updatedAt: Date.now()
+                        swapOffset: isRotationSwapped(),
+                        updatedAt: serverTimestamp()
                     }, { merge: true });
                 } catch (err) {
                     console.warn("Cloud write failed (cached locally):", err);
+                }
+            };
+
+            // Atomic single-note update or explicit deleteField() removal
+            window.syncLessonNoteChangeToCloud = async function (slotKey, noteTextOrNull) {
+                if (!activeUser || activeUser.isAnonymous) return;
+                const docRef = getUserTimetableDocRef(activeUser.uid);
+                try {
+                    if (noteTextOrNull && noteTextOrNull.trim().length > 0) {
+                        await setDoc(docRef, {
+                            notes: { [slotKey]: noteTextOrNull.trim() },
+                            swapOffset: isRotationSwapped(),
+                            updatedAt: serverTimestamp()
+                        }, { merge: true });
+                    } else {
+                        // Explicitly delete the nested field in Firestore so merge never resurrects it
+                        await updateDoc(docRef, {
+                            [`notes.${slotKey}`]: deleteField(),
+                            updatedAt: serverTimestamp()
+                        });
+                    }
+                } catch (err) {
+                    // Fallback if document does not exist yet
+                    try {
+                        await setDoc(docRef, {
+                            notes: lessonNotes,
+                            swapOffset: isRotationSwapped(),
+                            updatedAt: serverTimestamp()
+                        });
+                    } catch (fallbackErr) {
+                        console.warn("Cloud note sync failed:", fallbackErr);
+                    }
+                }
+            };
+
+            window.firebaseEmailAuth = async function (mode, email, password) {
+                const submitBtn = document.getElementById("auth-submit-btn");
+                if (submitBtn) submitBtn.disabled = true;
+                clearAuthInlineMessage();
+
+                try {
+                    if (mode === "signup") {
+                        await createUserWithEmailAndPassword(auth, email, password);
+                        showAuthInlineMessage("Account created! Syncing your timetable...", false);
+                        showToast("Account created & synced!");
+                    } else {
+                        await signInWithEmailAndPassword(auth, email, password);
+                        showAuthInlineMessage("Signed in! Syncing your timetable...", false);
+                        showToast("Signed in & synced!");
+                    }
+                    document.getElementById("auth-password-input").value = "";
+                    setTimeout(() => closeAccountModal(), 450);
+                } catch (err) {
+                    showAuthInlineMessage(formatFirebaseAuthError(err), true);
+                } finally {
+                    if (submitBtn) submitBtn.disabled = false;
                 }
             };
 
@@ -1656,16 +1731,17 @@
                 const provider = new GoogleAuthProvider();
                 try {
                     await signInWithPopup(auth, provider);
-                    showToast("Signed in! Syncing timetable across devices...");
+                    showToast("Signed in with Google!");
+                    closeAccountModal();
                 } catch (err) {
-                    if (err && (err.code === "auth/popup-blocked" || err.code === "auth/operation-not-supported-in-this-environment")) {
+                    if (err && err.code === "auth/operation-not-supported-in-this-environment") {
                         try {
                             await signInWithRedirect(auth, provider);
                         } catch (redirErr) {
-                            showToast("Sign-in blocked in preview — use Transfer Link below!");
+                            showAuthInlineMessage(formatFirebaseAuthError(redirErr), true);
                         }
                     } else {
-                        showToast("Could not sign in — use Transfer Link below!");
+                        showAuthInlineMessage(formatFirebaseAuthError(err), true);
                     }
                 }
             };
@@ -1673,7 +1749,8 @@
             window.firebaseGoogleSignOut = async function () {
                 try {
                     await signOut(auth);
-                    showToast("Signed out of Cloud Sync");
+                    showToast("Signed out — notes stay cached locally");
+                    closeAccountModal();
                 } catch (err) {
                     console.warn("Sign out error:", err);
                 }
@@ -1684,39 +1761,44 @@
                     unsubscribeDoc();
                     unsubscribeDoc = null;
                 }
-                activeUser = user;
-                hasInitialRemoteHydrated = false;
 
-                if (!user) {
-                    updateSyncStatusUI("local", "Sign in with Google on both your laptop and phone to automatically sync notes in real time.");
+                // Only sync to cloud when signed into a real account (Google or Email/Password)
+                if (!user || user.isAnonymous) {
+                    activeUser = null;
+                    hasInitialRemoteHydrated = false;
+                    updateAccountUI(null);
                     return;
                 }
 
-                const accountLabel = user.email
-                    ? `Signed in as ${user.email}. All notes & A/B rotation changes sync live.`
-                    : `Connected to Cloud Sync (Device ID: ${user.uid}).`;
-                updateSyncStatusUI("synced", accountLabel);
+                activeUser = user;
+                hasInitialRemoteHydrated = false;
+                updateAccountUI(user);
 
                 const docRef = getUserTimetableDocRef(user.uid);
                 unsubscribeDoc = onSnapshot(docRef, (snap) => {
                     if (snap.exists()) {
-                        const data = snap.data();
-                        const remoteNotes = (data && data.notes && typeof data.notes === "object") ? data.notes : {};
+                        const data = snap.data() || {};
+                        const remoteNotes = (data.notes && typeof data.notes === "object") ? data.notes : {};
+                        const hasRemoteNotes = Object.keys(remoteNotes).length > 0;
+
                         if (!hasInitialRemoteHydrated) {
-                            // Merge any offline local notes with remote notes on first connect
-                            lessonNotes = Object.assign({}, remoteNotes, lessonNotes);
                             hasInitialRemoteHydrated = true;
-                            persistLessonNotes();
-                            if (Object.keys(lessonNotes).length > Object.keys(remoteNotes).length) {
+                            if (hasRemoteNotes) {
+                                // Cloud account already has notes -> load cloud notes as source of truth
+                                lessonNotes = Object.assign({}, remoteNotes);
+                                persistLessonNotes();
+                            } else if (Object.keys(lessonNotes).length > 0) {
+                                // Cloud account is empty but device has local notes -> migrate local notes up
                                 window.pushTimetableStateToCloud();
                             }
                         } else {
-                            lessonNotes = remoteNotes;
+                            // Live real-time update from another device (including note deletions!)
+                            lessonNotes = Object.assign({}, remoteNotes);
                             persistLessonNotes();
                         }
 
-                        if (typeof data.swapped === "boolean" && data.swapped !== isRotationSwapped()) {
-                            setRotationSwappedLocal(data.swapped);
+                        if (typeof data.swapOffset === "boolean" && data.swapOffset !== isRotationSwapped()) {
+                            setRotationSwappedLocal(data.swapOffset);
                             currentRotatedWeek = getActiveRotatedWeek();
                             viewMode = currentRotatedWeek;
                         }
@@ -1724,26 +1806,25 @@
                         updateHeaderControls();
                         renderTimetable();
                     } else {
+                        // Brand new cloud document -> migrate any existing local notes & rotation
                         hasInitialRemoteHydrated = true;
                         if (Object.keys(lessonNotes).length > 0 || isRotationSwapped()) {
                             window.pushTimetableStateToCloud();
                         }
                     }
                 }, (error) => {
-                    console.warn("Firestore sync listener error:", error);
+                    console.warn("Firestore real-time listener error:", error);
                 });
             });
 
-            // Automatically authenticate environment session if token is provided
+            // Sign in with custom environment token only if provided (does not override real user accounts)
             (async () => {
                 try {
-                    if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) {
+                    if (typeof __initial_auth_token !== "undefined" && __initial_auth_token && !auth.currentUser) {
                         await signInWithCustomToken(auth, __initial_auth_token);
-                    } else if (!auth.currentUser) {
-                        await signInAnonymously(auth);
                     }
                 } catch (authErr) {
-                    console.warn("Initial background auth skipped:", authErr);
+                    console.warn("Custom token auth skipped:", authErr);
                 }
             })();
         }
