@@ -937,9 +937,9 @@
         <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="account-modal-title" style="max-width:430px;">
             <div class="modal-header" style="background:linear-gradient(135deg,#0284c7,#00a6e0);color:#ffffff;">
                 <div>
-                    <div class="modal-meta">Cross-Device Cloud Sync</div>
-                    <h2 id="account-modal-title" class="modal-subject">Your Timetable Account</h2>
-                    <div id="account-modal-sub" class="modal-subdetails">Sign in on PC and phone to sync notes automatically</div>
+                    <div class="modal-meta">Cross-Device Cloud &amp; Code Sync</div>
+                    <h2 id="account-modal-title" class="modal-subject">Sync Your Timetable</h2>
+                    <div id="account-modal-sub" class="modal-subdetails">Sign in with Email or copy a quick backup code to your phone</div>
                 </div>
                 <button type="button" class="modal-close" onclick="closeAccountModal()" aria-label="Close account modal">&times;</button>
             </div>
@@ -962,24 +962,8 @@
                     </button>
                 </div>
 
-                <!-- Signed-Out Auth Form View -->
-                <div id="account-signed-out-panel" style="display:flex;flex-direction:column;gap:12px;">
-                    <button type="button" onclick="triggerGoogleSignIn()" class="action-btn" style="justify-content:center;padding:10px 14px;font-weight:700;border-color:#cbd5e1;background:#ffffff;box-shadow:0 1px 2px rgba(15,23,42,0.05);">
-                        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-                            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
-                            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"/>
-                            <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"/>
-                            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"/>
-                        </svg>
-                        <span>Continue with Google</span>
-                    </button>
-
-                    <div style="display:flex;align-items:center;gap:10px;color:var(--text-muted);font-size:0.72rem;font-weight:700;text-transform:uppercase;">
-                        <span style="flex:1;height:1px;background:var(--border-light);"></span>
-                        <span>or use email &amp; password</span>
-                        <span style="flex:1;height:1px;background:var(--border-light);"></span>
-                    </div>
-
+                <!-- Signed-Out Auth Form View (Email & Password Only) -->
+                <div id="account-signed-out-panel" style="display:flex;flex-direction:column;gap:10px;">
                     <!-- Sign In / Create Account Mode Switcher -->
                     <div class="segmented-control" style="width:100%;display:grid;grid-template-columns:1fr 1fr;">
                         <button type="button" id="auth-tab-signin" class="seg-btn active" onclick="setAuthTab('signin')">Sign In</button>
@@ -1004,6 +988,23 @@
                             Sign In
                         </button>
                     </form>
+                </div>
+
+                <!-- Instant One-Tap Backup Code Transfer (Works Offline & Without Accounts) -->
+                <div style="border-top:1px solid var(--border-light);padding-top:12px;display:flex;flex-direction:column;gap:8px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                        <span style="font-size:0.74rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-secondary);">Instant Backup Code</span>
+                        <button type="button" class="action-btn" onclick="copyBackupSyncCode()" style="padding:5px 10px;font-size:0.74rem;font-weight:700;">
+                            Copy Backup Code
+                        </button>
+                    </div>
+                    <div style="display:flex;gap:6px;">
+                        <input type="text" id="backup-code-input" placeholder="Paste backup code from another device..."
+                            style="flex:1;padding:8px 10px;border-radius:9px;border:1px solid var(--border-mid);font-size:0.78rem;color:var(--text-primary);outline:none;" />
+                        <button type="button" class="action-btn primary" onclick="importBackupSyncCode()" style="padding:8px 12px;font-size:0.76rem;">
+                            Import
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1502,22 +1503,80 @@
             if (typeof window.firebaseEmailAuth === "function") {
                 window.firebaseEmailAuth(currentAuthTab, email, password);
             } else {
-                showAuthInlineMessage("Cloud authentication is unavailable in offline mode.", true);
-            }
-        }
-
-        function triggerGoogleSignIn() {
-            clearAuthInlineMessage();
-            if (typeof window.firebaseGoogleSignIn === "function") {
-                window.firebaseGoogleSignIn();
-            } else {
-                showAuthInlineMessage("Cloud authentication is unavailable in offline mode.", true);
+                showAuthInlineMessage("Cloud sign-in is unavailable in preview mode — use Copy/Import Backup Code below!", true);
             }
         }
 
         function triggerSignOut() {
             if (typeof window.firebaseGoogleSignOut === "function") {
                 window.firebaseGoogleSignOut();
+            }
+        }
+
+        /**
+         * ============================================================================
+         * INSTANT ONE-TAP EXPORT / IMPORT BACKUP CODE
+         * ============================================================================
+         */
+        function copyBackupSyncCode() {
+            const payload = {
+                v: 1,
+                notes: lessonNotes,
+                swap: isRotationSwapped()
+            };
+            const jsonStr = JSON.stringify(payload);
+            const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
+            const codeString = `10C-SYNC:${encoded}`;
+
+            const tempTextarea = document.createElement("textarea");
+            tempTextarea.value = codeString;
+            tempTextarea.style.position = "fixed";
+            tempTextarea.style.left = "-9999px";
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+            try {
+                document.execCommand("copy");
+                showToast("Backup code copied! Paste it on your phone.");
+            } catch (e) {
+                showToast("Could not copy backup code.");
+            }
+            document.body.removeChild(tempTextarea);
+        }
+
+        function importBackupSyncCode() {
+            const inputEl = document.getElementById("backup-code-input");
+            if (!inputEl) return;
+            const raw = inputEl.value.trim();
+            if (!raw) {
+                showToast("Paste a backup code first!");
+                return;
+            }
+            try {
+                const base64Part = raw.startsWith("10C-SYNC:") ? raw.slice(9).trim() : raw;
+                const decodedStr = decodeURIComponent(escape(atob(base64Part)));
+                const parsed = JSON.parse(decodedStr);
+                if (!parsed || typeof parsed !== "object") {
+                    throw new Error("Invalid backup payload");
+                }
+                if (parsed.notes && typeof parsed.notes === "object") {
+                    lessonNotes = Object.assign({}, parsed.notes);
+                    persistLessonNotes();
+                }
+                if (typeof parsed.swap === "boolean") {
+                    setRotationSwappedLocal(parsed.swap);
+                    currentRotatedWeek = getActiveRotatedWeek();
+                    viewMode = currentRotatedWeek;
+                }
+                updateHeaderControls();
+                renderTimetable();
+                if (typeof window.pushTimetableStateToCloud === "function") {
+                    window.pushTimetableStateToCloud();
+                }
+                inputEl.value = "";
+                closeAccountModal();
+                showToast("Timetable notes & settings imported!");
+            } catch (e) {
+                showToast("Invalid backup code — check and try again.");
             }
         }
 
@@ -1563,12 +1622,10 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import {
             getAuth,
-            GoogleAuthProvider,
-            signInWithPopup,
-            signInWithRedirect,
             signInWithEmailAndPassword,
             createUserWithEmailAndPassword,
             signInWithCustomToken,
+            signInAnonymously,
             signOut,
             onAuthStateChanged
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -1583,6 +1640,7 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const appId = typeof __app_id !== "undefined" ? __app_id : "class-10c-timetable";
+        const initialAuthToken = typeof __initial_auth_token !== "undefined" ? __initial_auth_token : null;
         let firebaseConfig = null;
         try {
             if (typeof __firebase_config !== "undefined" && __firebase_config) {
@@ -1595,238 +1653,161 @@
         }
 
         function formatFirebaseAuthError(err) {
-            const code = (err && err.code) ? err.code : "";
-            switch (code) {
-                case "auth/invalid-email":
-                    return "Please enter a valid email address.";
-                case "auth/user-not-found":
-                case "auth/wrong-password":
-                case "auth/invalid-credential":
-                    return "Incorrect email or password.";
-                case "auth/email-already-in-use":
-                    return "An account with this email already exists. Switch to Sign In.";
-                case "auth/weak-password":
-                    return "Password must be at least 6 characters.";
-                case "auth/too-many-requests":
-                    return "Too many attempts. Please wait a moment and try again.";
-                case "auth/popup-closed-by-user":
-                    return "Google sign-in popup was closed before finishing.";
-                case "auth/popup-blocked":
-                    return "Popup blocked by browser. Use Email & Password below!";
-                default:
-                    return (err && err.message) ? err.message : "Authentication failed. Please try again.";
+            const code = err && err.code ? err.code : "";
+            if (code.includes("user-not-found") || code.includes("wrong-password") || code.includes("invalid-credential")) {
+                return "Incorrect email or password. Please check your details or create an account.";
             }
+            if (code.includes("email-already-in-use")) {
+                return "An account with this email already exists. Try signing in instead.";
+            }
+            if (code.includes("weak-password")) {
+                return "Password should be at least 6 characters long.";
+            }
+            if (code.includes("operation-not-allowed")) {
+                return "Email/Password sign-in is not enabled in Firebase Console yet. Use Backup Codes below!";
+            }
+            return err && err.message ? err.message : "Authentication error occurred.";
         }
 
-        function updateAccountUI(user) {
-            const pill = document.getElementById("cloud-sync-pill");
-            const label = document.getElementById("cloud-sync-label");
-            const noteHint = document.getElementById("note-storage-hint");
-            const signedInPanel = document.getElementById("account-signed-in-panel");
-            const signedOutPanel = document.getElementById("account-signed-out-panel");
-            const userEmailDisplay = document.getElementById("signed-in-user-email");
+        let app = null;
+        let auth = null;
+        let db = null;
+        let unsubscribeSnapshot = null;
+        let isSyncingFromCloud = false;
 
-            if (!pill || !label) return;
+        if (firebaseConfig) {
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
 
-            if (user && !user.isAnonymous) {
-                const displayName = user.email || user.displayName || "Signed-In Account";
-                pill.classList.add("synced");
-                label.textContent = `${displayName} \u2022 Synced`;
-                if (noteHint) noteHint.textContent = "Synced to cloud automatically";
-                if (signedInPanel) signedInPanel.style.display = "flex";
-                if (signedOutPanel) signedOutPanel.style.display = "none";
-                if (userEmailDisplay) userEmailDisplay.textContent = displayName;
-            } else {
-                pill.classList.remove("synced");
-                label.textContent = "Sign In to Sync";
-                if (noteHint) noteHint.textContent = "Saved locally on this device";
-                if (signedInPanel) signedInPanel.style.display = "none";
-                if (signedOutPanel) signedOutPanel.style.display = "flex";
-            }
-        }
-
-        if (firebaseConfig && firebaseConfig.apiKey) {
-            const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const db = getFirestore(app);
-            let activeUser = null;
-            let unsubscribeDoc = null;
-            let hasInitialRemoteHydrated = false;
-
-            function getUserTimetableDocRef(uid) {
-                return doc(db, "artifacts", appId, "users", uid, "timetable", "data");
-            }
-
-            // Full state sync (used for initial migration & Swap A/B toggle)
-            window.pushTimetableStateToCloud = async function () {
-                if (!activeUser || activeUser.isAnonymous) return;
-                try {
-                    await setDoc(getUserTimetableDocRef(activeUser.uid), {
-                        notes: lessonNotes,
-                        swapOffset: isRotationSwapped(),
-                        updatedAt: serverTimestamp()
-                    }, { merge: true });
-                } catch (err) {
-                    console.warn("Cloud write failed (cached locally):", err);
+                function getUserTimetableDocRef(uid) {
+                    return doc(db, "artifacts", appId, "users", uid, "timetable", "state");
                 }
-            };
 
-            // Atomic single-note update or explicit deleteField() removal
-            window.syncLessonNoteChangeToCloud = async function (slotKey, noteTextOrNull) {
-                if (!activeUser || activeUser.isAnonymous) return;
-                const docRef = getUserTimetableDocRef(activeUser.uid);
-                try {
-                    if (noteTextOrNull && noteTextOrNull.trim().length > 0) {
-                        await setDoc(docRef, {
-                            notes: { [slotKey]: noteTextOrNull.trim() },
-                            swapOffset: isRotationSwapped(),
+                window.pushTimetableStateToCloud = async function () {
+                    if (!auth || !auth.currentUser || !db) return;
+                    try {
+                        const ref = getUserTimetableDocRef(auth.currentUser.uid);
+                        await setDoc(ref, {
+                            notes: window.lessonNotes || {},
+                            swap: isRotationSwapped(),
                             updatedAt: serverTimestamp()
                         }, { merge: true });
-                    } else {
-                        // Explicitly delete the nested field in Firestore so merge never resurrects it
-                        await updateDoc(docRef, {
-                            [`notes.${slotKey}`]: deleteField(),
-                            updatedAt: serverTimestamp()
-                        });
+                    } catch (e) {
+                        console.warn("Failed to push state to cloud:", e);
                     }
-                } catch (err) {
-                    // Fallback if document does not exist yet
+                };
+
+                window.syncLessonNoteChangeToCloud = async function (slotKey, text) {
+                    if (!auth || !auth.currentUser || !db || isSyncingFromCloud) return;
                     try {
-                        await setDoc(docRef, {
-                            notes: lessonNotes,
-                            swapOffset: isRotationSwapped(),
-                            updatedAt: serverTimestamp()
-                        });
-                    } catch (fallbackErr) {
-                        console.warn("Cloud note sync failed:", fallbackErr);
-                    }
-                }
-            };
-
-            window.firebaseEmailAuth = async function (mode, email, password) {
-                const submitBtn = document.getElementById("auth-submit-btn");
-                if (submitBtn) submitBtn.disabled = true;
-                clearAuthInlineMessage();
-
-                try {
-                    if (mode === "signup") {
-                        await createUserWithEmailAndPassword(auth, email, password);
-                        showAuthInlineMessage("Account created! Syncing your timetable...", false);
-                        showToast("Account created & synced!");
-                    } else {
-                        await signInWithEmailAndPassword(auth, email, password);
-                        showAuthInlineMessage("Signed in! Syncing your timetable...", false);
-                        showToast("Signed in & synced!");
-                    }
-                    document.getElementById("auth-password-input").value = "";
-                    setTimeout(() => closeAccountModal(), 450);
-                } catch (err) {
-                    showAuthInlineMessage(formatFirebaseAuthError(err), true);
-                } finally {
-                    if (submitBtn) submitBtn.disabled = false;
-                }
-            };
-
-            window.firebaseGoogleSignIn = async function () {
-                const provider = new GoogleAuthProvider();
-                try {
-                    await signInWithPopup(auth, provider);
-                    showToast("Signed in with Google!");
-                    closeAccountModal();
-                } catch (err) {
-                    if (err && err.code === "auth/operation-not-supported-in-this-environment") {
-                        try {
-                            await signInWithRedirect(auth, provider);
-                        } catch (redirErr) {
-                            showAuthInlineMessage(formatFirebaseAuthError(redirErr), true);
-                        }
-                    } else {
-                        showAuthInlineMessage(formatFirebaseAuthError(err), true);
-                    }
-                }
-            };
-
-            window.firebaseGoogleSignOut = async function () {
-                try {
-                    await signOut(auth);
-                    showToast("Signed out — notes stay cached locally");
-                    closeAccountModal();
-                } catch (err) {
-                    console.warn("Sign out error:", err);
-                }
-            };
-
-            onAuthStateChanged(auth, (user) => {
-                if (unsubscribeDoc) {
-                    unsubscribeDoc();
-                    unsubscribeDoc = null;
-                }
-
-                // Only sync to cloud when signed into a real account (Google or Email/Password)
-                if (!user || user.isAnonymous) {
-                    activeUser = null;
-                    hasInitialRemoteHydrated = false;
-                    updateAccountUI(null);
-                    return;
-                }
-
-                activeUser = user;
-                hasInitialRemoteHydrated = false;
-                updateAccountUI(user);
-
-                const docRef = getUserTimetableDocRef(user.uid);
-                unsubscribeDoc = onSnapshot(docRef, (snap) => {
-                    if (snap.exists()) {
-                        const data = snap.data() || {};
-                        const remoteNotes = (data.notes && typeof data.notes === "object") ? data.notes : {};
-                        const hasRemoteNotes = Object.keys(remoteNotes).length > 0;
-
-                        if (!hasInitialRemoteHydrated) {
-                            hasInitialRemoteHydrated = true;
-                            if (hasRemoteNotes) {
-                                // Cloud account already has notes -> load cloud notes as source of truth
-                                lessonNotes = Object.assign({}, remoteNotes);
-                                persistLessonNotes();
-                            } else if (Object.keys(lessonNotes).length > 0) {
-                                // Cloud account is empty but device has local notes -> migrate local notes up
-                                window.pushTimetableStateToCloud();
-                            }
+                        const ref = getUserTimetableDocRef(auth.currentUser.uid);
+                        if (text === null || text === undefined || text === "") {
+                            await updateDoc(ref, {
+                                [`notes.${slotKey}`]: deleteField(),
+                                updatedAt: serverTimestamp()
+                            });
                         } else {
-                            // Live real-time update from another device (including note deletions!)
-                            lessonNotes = Object.assign({}, remoteNotes);
-                            persistLessonNotes();
+                            await updateDoc(ref, {
+                                [`notes.${slotKey}`]: text,
+                                updatedAt: serverTimestamp()
+                            });
                         }
+                    } catch (e) {
+                        console.warn("Failed to sync note change:", e);
+                    }
+                };
 
-                        if (typeof data.swapOffset === "boolean" && data.swapOffset !== isRotationSwapped()) {
-                            setRotationSwappedLocal(data.swapOffset);
-                            currentRotatedWeek = getActiveRotatedWeek();
-                            viewMode = currentRotatedWeek;
+                window.firebaseEmailAuth = async function (mode, email, password) {
+                    clearAuthInlineMessage();
+                    const submitBtn = document.getElementById("auth-submit-btn");
+                    if (submitBtn) submitBtn.textContent = mode === "signup" ? "Creating..." : "Signing in...";
+                    try {
+                        if (mode === "signup") {
+                            await createUserWithEmailAndPassword(auth, email, password);
+                        } else {
+                            await signInWithEmailAndPassword(auth, email, password);
                         }
+                        closeAccountModal();
+                        showToast("Signed in successfully!");
+                    } catch (err) {
+                        showAuthInlineMessage(formatFirebaseAuthError(err), true);
+                    } finally {
+                        if (submitBtn) submitBtn.textContent = mode === "signup" ? "Create Account" : "Sign In";
+                    }
+                };
 
-                        updateHeaderControls();
-                        renderTimetable();
+                window.firebaseGoogleSignOut = async function () {
+                    try {
+                        await signOut(auth);
+                        closeAccountModal();
+                        showToast("Signed out successfully");
+                    } catch (e) {
+                        console.warn("Sign out error:", e);
+                    }
+                };
+
+                onAuthStateChanged(auth, async (user) => {
+                    const syncPill = document.getElementById("cloud-sync-pill");
+                    const syncLabel = document.getElementById("cloud-sync-label");
+                    const signedInPanel = document.getElementById("account-signed-in-panel");
+                    const signedOutPanel = document.getElementById("account-signed-out-panel");
+                    const userEmailSpan = document.getElementById("signed-in-user-email");
+
+                    if (unsubscribeSnapshot) {
+                        unsubscribeSnapshot();
+                        unsubscribeSnapshot = null;
+                    }
+
+                    if (user) {
+                        if (syncPill) syncPill.classList.add("synced");
+                        if (syncLabel) syncLabel.textContent = user.email ? user.email.split("@")[0] : "Synced";
+                        if (signedInPanel) signedInPanel.style.display = "flex";
+                        if (signedOutPanel) signedOutPanel.style.display = "none";
+                        if (userEmailSpan) userEmailSpan.textContent = user.email || "Anonymous Student";
+
+                        if (db) {
+                            const ref = getUserTimetableDocRef(user.uid);
+                            unsubscribeSnapshot = onSnapshot(ref, (docSnap) => {
+                                if (docSnap.exists() && !isSyncingFromCloud) {
+                                    isSyncingFromCloud = true;
+                                    const data = docSnap.data();
+                                    if (data.notes && typeof data.notes === "object") {
+                                        window.lessonNotes = Object.assign({}, data.notes);
+                                        try {
+                                            localStorage.setItem(STORAGE_NOTES_KEY, JSON.stringify(window.lessonNotes));
+                                        } catch (err) {}
+                                    }
+                                    if (typeof data.swap === "boolean" && data.swap !== isRotationSwapped()) {
+                                        setRotationSwappedLocal(data.swap);
+                                        currentRotatedWeek = getActiveRotatedWeek();
+                                        viewMode = currentRotatedWeek;
+                                        updateHeaderControls();
+                                    }
+                                    renderTimetable();
+                                    isSyncingFromCloud = false;
+                                }
+                            }, (err) => {
+                                console.warn("Firestore snapshot error:", err);
+                            });
+                        }
                     } else {
-                        // Brand new cloud document -> migrate any existing local notes & rotation
-                        hasInitialRemoteHydrated = true;
-                        if (Object.keys(lessonNotes).length > 0 || isRotationSwapped()) {
-                            window.pushTimetableStateToCloud();
-                        }
+                        if (syncPill) syncPill.classList.remove("synced");
+                        if (syncLabel) syncLabel.textContent = "Sign In to Sync";
+                        if (signedInPanel) signedInPanel.style.display = "none";
+                        if (signedOutPanel) signedOutPanel.style.display = "flex";
                     }
-                }, (error) => {
-                    console.warn("Firestore real-time listener error:", error);
                 });
-            });
 
-            // Sign in with custom environment token only if provided (does not override real user accounts)
-            (async () => {
-                try {
-                    if (typeof __initial_auth_token !== "undefined" && __initial_auth_token && !auth.currentUser) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    }
-                } catch (authErr) {
-                    console.warn("Custom token auth skipped:", authErr);
+                if (initialAuthToken) {
+                    signInWithCustomToken(auth, initialAuthToken).catch(() => {
+                        signInAnonymously(auth).catch(() => {});
+                    });
                 }
-            })();
+            } catch (e) {
+                console.warn("Firebase initialization warning:", e);
+            }
         }
     </script>
 </body>
